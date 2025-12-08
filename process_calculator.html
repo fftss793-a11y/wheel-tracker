@@ -390,7 +390,7 @@
         }
 
         .bg-loss {
-            background-color: #f59e0b;
+            background-color: #a855f7;
         }
 
         .bg-run {
@@ -398,7 +398,7 @@
         }
 
         .bg-switch {
-            background-color: #eab308;
+            background-color: #fde047;
         }
 
         .bg-complete {
@@ -1066,9 +1066,23 @@
 
             const judgeEl = document.getElementById('judgeResult');
             const detailEl = document.getElementById('judgeDetail');
-            const diff = totalWorkTime - totalRequiredTime;
-            if (diff >= 0) { judgeEl.textContent = "OK"; judgeEl.style.color = "var(--success)"; detailEl.textContent = `定時内に完了 (余裕 ${Math.floor(diff)}分)`; }
-            else { judgeEl.textContent = "残業"; judgeEl.style.color = "var(--danger)"; detailEl.textContent = `${Math.abs(Math.floor(diff))} 分の超過`; }
+
+            // 定時終了時刻を取得
+            const endTimeInputStr = document.getElementById('endTimeInput').value;
+            const [eh, em] = endTimeInputStr.split(':').map(Number);
+            const scheduledEndTimeMin = eh * 60 + em;
+
+            // 実際の終了時刻と定時を比較
+            const diff = scheduledEndTimeMin - endTimeMin;
+            if (diff >= 0) {
+                judgeEl.textContent = "OK";
+                judgeEl.style.color = "var(--success)";
+                detailEl.textContent = `定時内に完了 (余裕 ${Math.floor(diff)}分)`;
+            } else {
+                judgeEl.textContent = "残業";
+                judgeEl.style.color = "var(--danger)";
+                detailEl.textContent = `${Math.abs(Math.floor(diff))} 分の超過`;
+            }
 
             document.getElementById('detailMode').textContent = currentMode === '2E' ? '2E (固定)' : '混載';
             document.getElementById('detailTotalQty').textContent = totalQty.toLocaleString();
