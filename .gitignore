@@ -1,0 +1,24 @@
+# Node modules (if using npm in the future)
+node_modules/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*~
+
+# Temporary files
+*.tmp
+*.log
+
+# Separate Git projects
+morning_evening_check/
