@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工程能力シミュレーター V14 (NV73S)</title>
+    <title>工程能力シミュレーター V15 (NV73S)</title>
     <style>
         :root {
             --primary: #0f172a;
@@ -589,17 +589,30 @@
 
     <div class="container">
         <div class="sidebar">
-            <h1>工程能力シミュレーター V14</h1>
+            <h1>工程能力シミュレーター V15</h1>
             <div class="tab-container">
                 <button class="tab-btn active" onclick="switchTab('2E')">2E (固定)</button>
                 <button class="tab-btn" onclick="switchTab('Mixed')">他サイズ (混載)</button>
+            </div>
+
+            <div class="card" style="background: #f0f9ff; padding: 15px; margin-bottom: 15px;">
+                <div style="font-size: 0.9rem; font-weight: bold; color: #0369a1; margin-bottom: 8px;">評価モード</div>
+                <div class="tab-container">
+                    <button class="tab-btn" id="planModeBtn" onclick="switchEvalMode('plan')"
+                        style="font-size: 0.85rem;">計画モード</button>
+                    <button class="tab-btn active" id="evalModeBtn" onclick="switchEvalMode('eval')"
+                        style="font-size: 0.85rem;">実績評価</button>
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">
+                    <span id="evalModeDesc">実測最大速度で改善余地を評価</span>
+                </div>
             </div>
 
             <div class="card">
                 <div class="card-header">1. 製品・スケジュール<button class="btn-clear" onclick="clearInputs()">クリア</button>
                 </div>
                 <div class="input-group">
-                    <label class="input-label">勤務時間</label>
+                    <label class="input-label">稼働時間</label>
                     <div class="input-row">
                         <input type="time" id="startTime" value="08:15" onchange="calculate()">
                         <span style="font-size: 0.85rem; color: var(--text-sub);">～ <input type="time" id="endTimeInput"
@@ -693,7 +706,7 @@
                         <tr>
                             <td class="loss-check"><input type="checkbox" checked disabled></td>
                             <td class="loss-name">リール交換 (<span id="reelSwitchCount">0</span>回)<div
-                                    style="font-size: 0.75rem; color: var(--text-sub);">自動計算: 2分/回</div>
+                                    style="font-size: 0.75rem; color: var(--text-sub);">自動計算: 1分/回</div>
                             </td>
                             <td class="loss-time" id="reelSwitchTime">0</td>
                         </tr>
@@ -860,18 +873,49 @@
     </div>
 
     <script>
-        const SPECS = {
+        // 計画モード用（保守的）
+        const SPECS_PLAN = {
             '2E': { speed: 85, step: 2000, reel: 2000 },
             '2J': { speed: 70, step: 1000, reel: 1000 },
             '2L': { speed: 60, step: 1000, reel: 1000 },
             '2LH': { speed: 60, step: 1000, reel: 1000 }
         };
+
+        // 実績評価モード用（実測最大）
+        const SPECS_EVAL = {
+            '2E': { speed: 95, step: 2000, reel: 2000 },
+            '2J': { speed: 80, step: 1000, reel: 1000 },
+            '2L': { speed: 70, step: 1000, reel: 1000 },
+            '2LH': { speed: 70, step: 1000, reel: 1000 }
+        };
+
         const BREAKS = [
             { start: 600, duration: 5, name: "休憩" },
             { start: 705, duration: 45, name: "昼休憩" },
             { start: 900, duration: 10, name: "休憩" }
         ];
+
         let currentMode = '2E';
+        let currentEvalMode = 'eval'; // 'plan' or 'eval'
+        let SPECS = SPECS_EVAL; // デフォルトは実績評価モード
+
+        function switchEvalMode(mode) {
+            currentEvalMode = mode;
+            SPECS = (mode === 'plan') ? SPECS_PLAN : SPECS_EVAL;
+
+            // ボタンのactive状態を切り替え
+            document.getElementById('planModeBtn').classList.toggle('active', mode === 'plan');
+            document.getElementById('evalModeBtn').classList.toggle('active', mode === 'eval');
+
+            // 説明文を更新
+            const desc = mode === 'plan'
+                ? '保守的な速度で計画を立てる'
+                : '実測最大速度で改善余地を評価';
+            document.getElementById('evalModeDesc').textContent = desc;
+
+            // 再計算
+            calculate();
+        }
 
         function init() { initLotInputs2E(); initLotInputsMixed(); switchTab('2E'); }
 
@@ -890,7 +934,7 @@
         function initLotInputs2E() {
             const container = document.getElementById('lotInputs2E');
             container.innerHTML = `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-sub); margin-bottom: 4px; padding-right: 30px;"><span style="margin-left: 10px;">No.</span><span style="margin-left: 30px;">Lot数</span><span style="margin-right: 40px;">指示数(1Lot)</span></div>`;
-            for (let i = 1; i <= 4; i++) {
+            for (let i = 1; i <= 5; i++) {
                 const div = document.createElement('div');
                 div.className = 'lot-input-grid';
                 let options = '';
@@ -903,7 +947,7 @@
         function initLotInputsMixed() {
             const container = document.getElementById('lotInputsMixed');
             container.innerHTML = '';
-            for (let i = 1; i <= 4; i++) {
+            for (let i = 1; i <= 5; i++) {
                 const div = document.createElement('div');
                 div.className = 'lot-input-grid mixed-mode';
                 div.style.display = 'grid';
@@ -920,9 +964,9 @@
         function updateStepMixed(idx) { document.getElementById(`lotQtyMixed_${idx}`).step = SPECS[document.getElementById(`sizeMixed_${idx}`).value].step; }
 
         function clearInputs() {
-            for (let i = 1; i <= 4; i++) { document.getElementById(`lotCount2E_${i}`).value = "0"; document.getElementById(`lotQty2E_${i}`).value = "0"; }
+            for (let i = 1; i <= 5; i++) { document.getElementById(`lotCount2E_${i}`).value = "0"; document.getElementById(`lotQty2E_${i}`).value = "0"; }
             document.getElementById('morningTC').checked = false;
-            for (let i = 1; i <= 4; i++) { document.getElementById(`tcMixed_${i}`).checked = false; document.getElementById(`lotCountMixed_${i}`).value = "0"; document.getElementById(`lotQtyMixed_${i}`).value = "0"; document.getElementById(`sizeMixed_${i}`).value = "2J"; }
+            for (let i = 1; i <= 5; i++) { document.getElementById(`tcMixed_${i}`).checked = false; document.getElementById(`lotCountMixed_${i}`).value = "0"; document.getElementById(`lotQtyMixed_${i}`).value = "0"; document.getElementById(`sizeMixed_${i}`).value = "2J"; }
             calculate();
         }
 
@@ -949,7 +993,7 @@
 
             const lotSwitchUnitTime = parseFloat(document.getElementById('lotSwitchUnitTime').value) || 0;
 
-            for (let i = 1; i <= 4; i++) {
+            for (let i = 1; i <= 5; i++) {
                 let count, qty, size, tcChecked;
                 if (currentMode === '2E') { count = parseInt(document.getElementById(`lotCount2E_${i}`).value) || 0; qty = parseFloat(document.getElementById(`lotQty2E_${i}`).value) || 0; size = '2E'; tcChecked = false; }
                 else { count = parseInt(document.getElementById(`lotCountMixed_${i}`).value) || 0; qty = parseFloat(document.getElementById(`lotQtyMixed_${i}`).value) || 0; size = document.getElementById(`sizeMixed_${i}`).value; tcChecked = document.getElementById(`tcMixed_${i}`).checked; }
@@ -962,7 +1006,7 @@
                         const singleLotRunTime = singleLotQty / spec.speed;
                         const singleReelCount = Math.ceil(singleLotQty / spec.reel);
                         const singleReelSwitches = Math.max(0, singleReelCount - 1);
-                        const singleReelTime = singleReelSwitches * 2;
+                        const singleReelTime = singleReelSwitches * 1;
                         addEvent('Run', `製造(${size}) Lot${lotNum} - ${singleLotQty}個`, singleLotRunTime + singleReelTime, 'bg-run');
                         addEvent('Milestone', `✓ Lot${lotNum} 完了`, 0, 'bg-complete');
                         if (lotNum < count && lotSwitchUnitTime > 0) {
