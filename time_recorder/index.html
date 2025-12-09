@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>工程タイムレコーダー</title>
     <style>
         :root {
@@ -66,7 +65,7 @@
 
         main {
             padding: 16px;
-            max-width: 600px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
@@ -497,6 +496,118 @@
             height: 10px;
             border-radius: 3px;
         }
+
+        /* Memo Input */
+        .memo-input {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            background: white;
+        }
+
+        .memo-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Fullscreen Overlay */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .fullscreen-overlay.hidden {
+            display: none;
+        }
+
+        .fullscreen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .fullscreen-close {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .fullscreen-timeline {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            overflow: auto;
+            width: 100%;
+            max-width: 1200px;
+            max-height: 70vh;
+        }
+
+        .fullscreen-lane {
+            height: 80px;
+        }
+
+        .fullscreen-bar {
+            height: 60px;
+            font-size: 1rem;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white !important;
+            }
+
+            header,
+            .admin-toggle,
+            .admin-badge,
+            .controls,
+            .stage-indicator,
+            .stage-label,
+            .button-area,
+            #adminSettings,
+            .card-header:has(+ .setting-row) {
+                display: none !important;
+            }
+
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                page-break-inside: avoid;
+            }
+
+            .timeline-section {
+                display: block !important;
+            }
+
+            .log-container {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            .kpi-grid {
+                page-break-inside: avoid;
+            }
+        }
     </style>
 </head>
 
@@ -520,11 +631,34 @@
                         <option value="2LH">2LH</option>
                     </select></label>
             </div>
+
+            <!-- Admin Settings (hidden by default) -->
+            <div id="adminSettings" class="hidden"
+                style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border);">
+                <div style="font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 8px;">🔧
+                    管理者設定（休憩時間・目安）</div>
+                <div class="setting-row" style="margin-bottom: 8px;">
+                    <label>休憩1<input type="time" id="break1Start" value="10:00"></label>
+                    <label>時間(分)<input type="number" id="break1Dur" value="5" style="width: 60px;"></label>
+                </div>
+                <div class="setting-row" style="margin-bottom: 8px;">
+                    <label>昨休憩<input type="time" id="break2Start" value="11:45"></label>
+                    <label>時間(分)<input type="number" id="break2Dur" value="45" style="width: 60px;"></label>
+                </div>
+                <div class="setting-row">
+                    <label>休憩3<input type="time" id="break3Start" value="15:00"></label>
+                    <label>時間(分)<input type="number" id="break3Dur" value="10" style="width: 60px;"></label>
+                </div>
+            </div>
         </section>
 
         <!-- Operator Mode -->
         <section class="card">
-            <div class="card-header">🎯 オペレーターモード</div>
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🎯 オペレーターモード</span>
+                <button id="helpBtn"
+                    style="background: var(--primary); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 1rem;">?</button>
+            </div>
 
             <div class="stage-indicator">
                 <div class="stage-dot" id="stage1Dot"></div>
@@ -621,6 +755,7 @@
                             <th>時刻</th>
                             <th>区分</th>
                             <th>時間</th>
+                            <th>メモ</th>
                         </tr>
                     </thead>
                     <tbody id="logBody"></tbody>
@@ -644,6 +779,8 @@
                 <button id="csvBtn">📥 CSV</button>
                 <button id="clearBtn">🗑️ クリア</button>
                 <button id="timelineBtn">📊 タイムライン</button>
+                <button id="fullscreenBtn">🔍 拡大表示</button>
+                <button id="printBtn">🖨️ 印刷</button>
             </div>
 
             <!-- Timeline Section -->
@@ -680,7 +817,91 @@
                 </div>
             </div>
         </section>
+
+        <!-- Breakdown Section -->
+        <section class="card" id="breakdownSection">
+            <div class="card-header">📈 非稼働時間 内訳</div>
+            <div id="breakdownContent">
+                <div style="color: var(--text-sub); font-size: 0.9rem;">記録がありません</div>
+            </div>
+        </section>
     </main>
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay hidden" id="fullscreenOverlay">
+        <div class="fullscreen-header">
+            <h2>📊 タイムライン（拡大表示）</h2>
+            <button class="fullscreen-close" id="fullscreenClose">✕ 閉じる</button>
+        </div>
+        <div class="fullscreen-timeline">
+            <div class="timeline-scale" id="fullscreenScale"></div>
+            <div class="timeline-lane fullscreen-lane" id="fullscreenLane"></div>
+            <div class="timeline-legend" style="margin-top: 20px;">
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #a855f7;"></div>立ち上げ
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #22c55e;"></div>稼働
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #f59e0b;"></div>次Lotへ
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #ef4444;"></div>設備異常
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #6b7280;"></div>立ち下げ
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="fullscreen-overlay hidden" id="helpModal" style="background: rgba(0,0,0,0.8);">
+        <div class="fullscreen-header">
+            <h2>❓ 使い方ガイド</h2>
+            <button class="fullscreen-close" id="helpClose">✕ 閉じる</button>
+        </div>
+        <div class="fullscreen-timeline" style="max-width: 800px; margin: 0 auto;">
+            <h3 style="margin-bottom: 16px; color: var(--primary);">📋 基本操作フロー</h3>
+
+            <div style="margin-bottom: 20px; padding: 16px; background: #faf5ff; border-radius: 10px;">
+                <div style="font-weight: 600; color: #a855f7; margin-bottom: 8px;">🔧 ステージ1: 立ち上げ</div>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>朝、設備の電源を入れてウォームアップ開始</li>
+                    <li>「立ち上げ 開始」ボタンを押す</li>
+                    <li>準備が完了したら「立ち上げ 完了」を押す</li>
+                </ol>
+            </div>
+
+            <div style="margin-bottom: 20px; padding: 16px; background: #f0fdf4; border-radius: 10px;">
+                <div style="font-weight: 600; color: #22c55e; margin-bottom: 8px;">▶️ ステージ2: 通常作業</div>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>「稼働 開始」を押して製造開始</li>
+                    <li>Lotが終わったら「稼働 終了」を押す</li>
+                    <li>次のLotへ切り替える場合は「次Lotへ」を押す</li>
+                    <li>設備異常や部品交換が発生したらそのボタンを押す → 「再稼働」で再開</li>
+                </ol>
+            </div>
+
+            <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 10px;">
+                <div style="font-weight: 600; color: #6b7280; margin-bottom: 8px;">⏹️ ステージ3: 立ち下げ</div>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>最後のLotが終わったら「立ち下げ 開始」を押す</li>
+                    <li>設備の片付けが完了したら「立ち下げ 完了」を押す</li>
+                    <li>自動で記録がLocalStorageに保存されます</li>
+                </ol>
+            </div>
+
+            <h3 style="margin-bottom: 12px; color: var(--primary);">💡 ヒント</h3>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>メモ欄に異常の原因などを記録できます</li>
+                <li>「タイムライン」ボタンでガントチャート表示</li>
+                <li>「拡大表示」で大画面確認</li>
+                <li>「印刷」で上司への報告資料を作成</li>
+            </ul>
+        </div>
+    </div>
 
     <script>
         // State
@@ -883,13 +1104,23 @@
 
         // Render Log
         function renderLog() {
-            document.getElementById('logBody').innerHTML = state.events.map(ev => `
+            document.getElementById('logBody').innerHTML = state.events.map((ev, idx) => `
                 <tr>
                     <td>${ev.start} - ${ev.end}</td>
                     <td><span class="type-badge" style="background: ${ev.color}">${ev.type}</span></td>
                     <td>${ev.duration}分</td>
+                    <td><input type="text" class="memo-input" data-idx="${idx}" value="${ev.memo || ''}" placeholder="メモ"></td>
                 </tr>
             `).join('');
+
+            // Memo input handlers
+            document.querySelectorAll('.memo-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    state.events[idx].memo = e.target.value;
+                    saveState();
+                });
+            });
 
             const runTime = state.events.filter(e => e.type === '稼働').reduce((a, b) => a + b.duration, 0);
             const stopTime = state.events.filter(e => e.type !== '稼働').reduce((a, b) => a + b.duration, 0);
@@ -899,6 +1130,51 @@
             document.getElementById('kpiRun').textContent = `${runTime}分`;
             document.getElementById('kpiStop').textContent = `${stopTime}分`;
             document.getElementById('kpiRate').textContent = `${rate}%`;
+
+            renderBreakdown();
+        }
+
+        // Render Breakdown
+        function renderBreakdown() {
+            const fixedTypes = ['立ち上げ', '立ち下げ'];
+            const variableTypes = ['次Lotへ', '設備異常', '部品交換'];
+
+            const fixed = state.events.filter(e => fixedTypes.includes(e.type));
+            const variable = state.events.filter(e => variableTypes.includes(e.type));
+
+            const fixedTotal = fixed.reduce((a, b) => a + b.duration, 0);
+            const variableTotal = variable.reduce((a, b) => a + b.duration, 0);
+            const nonOpTotal = fixedTotal + variableTotal;
+
+            if (nonOpTotal === 0) {
+                document.getElementById('breakdownContent').innerHTML =
+                    '<div style="color: var(--text-sub); font-size: 0.9rem;">非稼働の記録がありません</div>';
+                return;
+            }
+
+            const fixedPct = Math.round((fixedTotal / nonOpTotal) * 100);
+            const variablePct = 100 - fixedPct;
+
+            const fixedDetails = [...new Set(fixed.map(e => e.type))].map(type => {
+                const dur = fixed.filter(e => e.type === type).reduce((a, b) => a + b.duration, 0);
+                return `${type} ${dur}分`;
+            }).join(', ');
+
+            const variableDetails = [...new Set(variable.map(e => e.type))].map(type => {
+                const dur = variable.filter(e => e.type === type).reduce((a, b) => a + b.duration, 0);
+                return `${type} ${dur}分`;
+            }).join(', ');
+
+            document.getElementById('breakdownContent').innerHTML = `
+                <div style="margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #6b7280;">📌 固定（削減困難）: ${fixedTotal}分 (${fixedPct}%)</div>
+                    <div style="font-size: 0.85rem; color: var(--text-sub); margin-left: 20px;">${fixedDetails || 'なし'}</div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #f59e0b;">⚡ 変動（改善可能）: ${variableTotal}分 (${variablePct}%)</div>
+                    <div style="font-size: 0.85rem; color: var(--text-sub); margin-left: 20px;">${variableDetails || 'なし'}</div>
+                </div>
+            `;
         }
 
         // CSV
@@ -1034,6 +1310,115 @@
             if (timelineVisible) {
                 renderTimeline();
             }
+        });
+
+        // Admin panel toggle
+        document.getElementById('adminToggle').addEventListener('click', () => {
+            const settings = document.getElementById('adminSettings');
+            const badge = document.getElementById('adminBadge');
+            settings.classList.toggle('hidden');
+            badge.classList.toggle('visible');
+        });
+
+        // Fullscreen Timeline
+        document.getElementById('fullscreenBtn').addEventListener('click', () => {
+            const overlay = document.getElementById('fullscreenOverlay');
+            overlay.classList.remove('hidden');
+            renderFullscreenTimeline();
+        });
+
+        document.getElementById('fullscreenClose').addEventListener('click', () => {
+            document.getElementById('fullscreenOverlay').classList.add('hidden');
+        });
+
+        function renderFullscreenTimeline() {
+            const scale = document.getElementById('fullscreenScale');
+            const lane = document.getElementById('fullscreenLane');
+            const totalMinutes = WORK_END - WORK_START;
+
+            scale.innerHTML = '';
+            lane.innerHTML = '';
+
+            // Draw time scale
+            for (let t = Math.ceil(WORK_START / 60) * 60; t <= WORK_END; t += 60) {
+                const pct = ((t - WORK_START) / totalMinutes) * 100;
+                const tick = document.createElement('span');
+                tick.className = 'timeline-tick';
+                tick.style.left = `${pct}%`;
+                tick.textContent = `${Math.floor(t / 60)}:00`;
+                scale.appendChild(tick);
+            }
+
+            // Draw break markers
+            BREAKS.forEach(brk => {
+                const startPct = ((brk.start - WORK_START) / totalMinutes) * 100;
+                const widthPct = (brk.duration / totalMinutes) * 100;
+                if (startPct >= 0 && startPct < 100) {
+                    const marker = document.createElement('div');
+                    marker.className = 'timeline-break';
+                    marker.style.left = `${Math.max(0, startPct)}%`;
+                    marker.style.width = `${widthPct}%`;
+                    lane.appendChild(marker);
+                }
+            });
+
+            // Draw event bars
+            state.events.forEach(ev => {
+                const startMin = timeToMinutes(ev.start);
+                const endMin = timeToMinutes(ev.end);
+                const startPct = ((startMin - WORK_START) / totalMinutes) * 100;
+                const widthPct = ((endMin - startMin) / totalMinutes) * 100;
+
+                if (startPct >= 0 && widthPct > 0) {
+                    const bar = document.createElement('div');
+                    bar.className = 'timeline-bar fullscreen-bar';
+                    bar.style.left = `${Math.max(0, startPct)}%`;
+                    bar.style.width = `${Math.max(0.5, widthPct)}%`;
+                    bar.style.background = ev.color;
+                    bar.title = `${ev.start}-${ev.end} ${ev.type} (${ev.duration}分)`;
+                    bar.textContent = `${ev.type} ${ev.duration}分`;
+                    lane.appendChild(bar);
+                }
+            });
+        }
+
+        // Print
+        document.getElementById('printBtn').addEventListener('click', () => {
+            // Show timeline for print
+            document.getElementById('timelineSection').classList.remove('hidden');
+            renderTimeline();
+
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        });
+
+        // History - Save by date
+        function saveHistory() {
+            const date = dateInput.value;
+            if (!date || state.events.length === 0) return;
+
+            const history = JSON.parse(localStorage.getItem('timeRecorderHistory') || '{}');
+            history[date] = {
+                events: state.events,
+                product: productSelect.value
+            };
+            localStorage.setItem('timeRecorderHistory', JSON.stringify(history));
+        }
+
+        // Auto-save history on shutdown complete
+        const originalShutdownHandler = document.getElementById('shutdownEndBtn').onclick;
+        document.getElementById('shutdownEndBtn').addEventListener('click', () => {
+            saveHistory();
+        });
+
+        // Help Modal
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            document.getElementById('helpModal').classList.remove('hidden');
+        });
+
+        document.getElementById('helpClose').addEventListener('click', () => {
+            document.getElementById('helpModal').classList.add('hidden');
         });
     </script>
 </body>
