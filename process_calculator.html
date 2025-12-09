@@ -720,7 +720,8 @@
                             <td class="loss-time" id="lotSwitchTimeDisp">0</td>
                         </tr>
                         <tr class="type-change-row">
-                            <td class="loss-check"><input type="checkbox" checked disabled></td>
+                            <td class="loss-check"><input type="checkbox" id="checkTypeChange" onchange="calculate()">
+                            </td>
                             <td class="loss-name">品種切替 (段替え)<div style="font-size: 0.75rem; color: var(--text-sub);">
                                     <span id="typeChangeCount">0</span> 回 × 15分
                                 </div>
@@ -823,19 +824,27 @@
                 <div class="card-header">計算詳細</div>
                 <table class="spec-table" style="font-size: 1rem;">
                     <tr>
-                        <td>モード</td>
+                        <td>モード
+                            <div style="font-size: 0.7rem; color: #64748b;">📌 現在選択中のサイズ</div>
+                        </td>
                         <td id="detailMode">---</td>
                     </tr>
                     <tr>
-                        <td>総製造数</td>
+                        <td>総製造数
+                            <div style="font-size: 0.7rem; color: #64748b;">📦 今日作る製品の合計数</div>
+                        </td>
                         <td id="detailTotalQty">--- 個</td>
                     </tr>
                     <tr>
-                        <td>非稼働時間合計</td>
+                        <td>非稼働時間合計
+                            <div style="font-size: 0.7rem; color: #64748b;">⚠️ 休憩・段取り・切替で失った時間</div>
+                        </td>
                         <td id="detailLoss">--- 分</td>
                     </tr>
                     <tr>
-                        <td>時間当たり生産数 (PPH)</td>
+                        <td>時間当たり生産数 (PPH)
+                            <div style="font-size: 0.7rem; color: #64748b;">🕒 1時間当たりの生産個数</div>
+                        </td>
                         <td id="detailPPH">--- 個/h</td>
                     </tr>
                     <tr style="background: #f0fdf4;">
@@ -857,7 +866,9 @@
                         <td id="detailEfficiency">--- %</td>
                     </tr>
                     <tr>
-                        <td>可動率 (Availability)</td>
+                        <td>可動率 (Availability)
+                            <div style="font-size: 0.7rem; color: #64748b;">⏰ 総時間のうち実際に作業できた割合</div>
+                        </td>
                         <td id="detailAvailability">--- %</td>
                     </tr>
                 </table>
@@ -946,17 +957,17 @@
 
         function initLotInputsMixed() {
             const container = document.getElementById('lotInputsMixed');
-            container.innerHTML = '';
+            container.innerHTML = `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-sub); margin-bottom: 4px; padding-right: 30px;"><span style="margin-left: 10px;">No.</span><span style="margin-left: 30px;">Lot数</span><span style="margin-right: 40px;">指示数(1Lot)</span></div>`;
             for (let i = 1; i <= 5; i++) {
                 const div = document.createElement('div');
-                div.className = 'lot-input-grid mixed-mode';
-                div.style.display = 'grid';
-                div.style.gap = '8px';
+                div.className = 'lot-input-grid';
                 let sizeOptions = '';
                 ['2J', '2L', '2LH'].forEach(s => sizeOptions += `<option value="${s}">${s}</option>`);
                 let countOptions = '';
                 for (let j = 1; j <= 10; j++) countOptions += `<option value="${j}">${j}</option>`;
-                div.innerHTML = `<div class="tc-row"><input type="checkbox" id="tcMixed_${i}" onchange="calculate()"><span>このLotの前に品種切替 (15分)</span></div><span class="lot-no">${i}</span><select id="sizeMixed_${i}" class="lot-select" onchange="updateStepMixed(${i}); calculate();">${sizeOptions}</select><select id="lotCountMixed_${i}" class="lot-select" onchange="calculate()"><option value="0">-</option>${countOptions}</select><input type="number" id="lotQtyMixed_${i}" class="lot-qty" value="0" min="0" step="1000" oninput="calculate()"><span class="unit">個</span>`;
+                let qtyOptions = '<option value="0">-</option>';
+                for (let q = 1000; q <= 6000; q += 1000) qtyOptions += `<option value="${q}">${q.toLocaleString()}</option>`;
+                div.innerHTML = `<span class="lot-no">${i}</span><select id="sizeMixed_${i}" class="lot-select" onchange="updateStepMixed(${i}); calculate();">${sizeOptions}</select><select id="lotCountMixed_${i}" class="lot-select" onchange="calculate()"><option value="0">-</option>${countOptions}</select><select id="lotQtyMixed_${i}" class="lot-select" onchange="calculate()">${qtyOptions}</select><span class="unit">個</span>`;
                 container.appendChild(div);
             }
         }
@@ -966,7 +977,7 @@
         function clearInputs() {
             for (let i = 1; i <= 5; i++) { document.getElementById(`lotCount2E_${i}`).value = "0"; document.getElementById(`lotQty2E_${i}`).value = "0"; }
             document.getElementById('morningTC').checked = false;
-            for (let i = 1; i <= 5; i++) { document.getElementById(`tcMixed_${i}`).checked = false; document.getElementById(`lotCountMixed_${i}`).value = "0"; document.getElementById(`lotQtyMixed_${i}`).value = "0"; document.getElementById(`sizeMixed_${i}`).value = "2J"; }
+            for (let i = 1; i <= 5; i++) { document.getElementById(`lotCountMixed_${i}`).value = "0"; document.getElementById(`lotQtyMixed_${i}`).value = "0"; document.getElementById(`sizeMixed_${i}`).value = "2J"; }
             calculate();
         }
 

@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程タイムレコーダー</title>
+    <style>
+        :root {
+            --bg: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --primary: #3b82f6;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #a855f7;
+            --cyan: #06b6d4;
+            --gray: #6b7280;
+            --text: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .admin-badge {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .admin-badge.visible {
+            display: inline-block;
+        }
+
+        main {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .setting-row label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .setting-row input,
+        .setting-row select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        /* Buttons */
+        .button-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .main-btn {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .main-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-startup {
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-resume {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-shutdown {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+        }
+
+        .timer-display {
+            text-align: center;
+            padding: 16px;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .timer-display.startup {
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+        }
+
+        .timer-display.paused {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .timer-display.shutdown {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+
+        .timer-label {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+
+        .timer-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .timer-display.startup .timer-value {
+            color: var(--purple);
+        }
+
+        .timer-display.paused .timer-value {
+            color: var(--warning);
+        }
+
+        .timer-display.shutdown .timer-value {
+            color: var(--gray);
+        }
+
+        /* Sub Buttons */
+        .sub-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .sub-btn {
+            padding: 14px 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .sub-btn:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+
+        .sub-btn .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Stage Indicator */
+        .stage-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stage-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+        }
+
+        .stage-dot.active {
+            background: var(--primary);
+        }
+
+        .stage-dot.completed {
+            background: var(--success);
+        }
+
+        .stage-label {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+        }
+
+        /* Log */
+        .log-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .log-table th,
+        .log-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .log-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--text-sub);
+            position: sticky;
+            top: 0;
+        }
+
+        .log-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .kpi-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .controls button {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .controls button:hover {
+            background: #f8fafc;
+        }
+
+        .admin-panel {
+            display: none;
+        }
+
+        .admin-panel.visible {
+            display: block;
+        }
+
+        .admin-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Timeline */
+        .timeline-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .timeline-container {
+            position: relative;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px;
+            overflow-x: auto;
+        }
+
+        .timeline-scale {
+            position: relative;
+            height: 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .timeline-tick {
+            position: absolute;
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            transform: translateX(-50%);
+        }
+
+        .timeline-lane {
+            position: relative;
+            height: 36px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .timeline-break {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: repeating-linear-gradient(45deg,
+                    rgba(148, 163, 184, 0.15),
+                    rgba(148, 163, 184, 0.15) 4px,
+                    transparent 4px,
+                    transparent 8px);
+            border-left: 2px dashed #94a3b8;
+            border-right: 2px dashed #94a3b8;
+        }
+
+        .timeline-break-label {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 0.6rem;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .timeline-bar {
+            position: absolute;
+            top: 4px;
+            height: 28px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            min-width: 2px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .timeline-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+            font-size: 0.75rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>⏱️ 工程タイムレコーダー</h1>
+        <span class="admin-badge" id="adminBadge">管理者モード</span>
+        <button class="admin-toggle" id="adminToggle">⚙️</button>
+    </header>
+
+    <main>
+        <!-- Settings -->
+        <section class="card">
+            <div class="card-header">📅 設定</div>
+            <div class="setting-row">
+                <label>日付<input type="date" id="dateInput"></label>
+                <label>製品<select id="productSelect">
+                        <option value="2E">2E</option>
+                        <option value="2J">2J</option>
+                        <option value="2L">2L</option>
+                        <option value="2LH">2LH</option>
+                    </select></label>
+            </div>
+        </section>
+
+        <!-- Operator Mode -->
+        <section class="card">
+            <div class="card-header">🎯 オペレーターモード</div>
+
+            <div class="stage-indicator">
+                <div class="stage-dot" id="stage1Dot"></div>
+                <div class="stage-dot" id="stage2Dot"></div>
+                <div class="stage-dot" id="stage3Dot"></div>
+            </div>
+            <div class="stage-label" id="stageLabel">ステージ1: 立ち上げ</div>
+
+            <!-- Stage 1: Startup -->
+            <div id="stage1" class="button-area">
+                <button class="main-btn btn-startup" id="startupBtn">🔧 立ち上げ 開始</button>
+            </div>
+
+            <!-- Stage 1: Startup Running -->
+            <div id="stage1Running" class="button-area hidden">
+                <div class="timer-display startup">
+                    <div class="timer-label">立ち上げ中</div>
+                    <div class="timer-value" id="startupTimer">0 分</div>
+                </div>
+                <button class="main-btn btn-startup" id="startupEndBtn">✓ 立ち上げ 完了</button>
+            </div>
+
+            <!-- Stage 2: Normal Operation - Idle -->
+            <div id="stage2Idle" class="button-area hidden">
+                <button class="main-btn btn-start" id="runStartBtn">▶️ 稼働 開始</button>
+                <button class="sub-btn" data-type="次Lotへ" data-color="#f59e0b" style="margin-top: 8px;">
+                    <span class="dot" style="background: #f59e0b"></span>🔄 次Lotへ
+                </button>
+                <button class="main-btn btn-shutdown" id="shutdownBtn"
+                    style="margin-top: 20px; font-size: 1rem; padding: 14px;">⏹️ 立ち下げ 開始</button>
+            </div>
+
+            <!-- Stage 2: Normal Operation - Running -->
+            <div id="stage2Running" class="button-area hidden">
+                <div class="timer-display">
+                    <div class="timer-label">稼働中</div>
+                    <div class="timer-value" id="runTimer">0 分</div>
+                </div>
+                <button class="main-btn btn-stop" id="runStopBtn">⏹️ 稼働 終了</button>
+                <div class="sub-buttons" id="runningEvents">
+                    <button class="sub-btn" data-type="設備異常" data-color="#ef4444">
+                        <span class="dot" style="background: #ef4444"></span>設備異常
+                    </button>
+                    <button class="sub-btn" data-type="部品交換" data-color="#a855f7">
+                        <span class="dot" style="background: #a855f7"></span>部品交換
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stage 2: Paused -->
+            <div id="stage2Paused" class="button-area hidden">
+                <div class="timer-display paused">
+                    <div class="timer-label" id="pausedLabel">一時停止中</div>
+                    <div class="timer-value" id="pausedTimer">0 分</div>
+                </div>
+                <button class="main-btn btn-resume" id="resumeBtn">▶️ 再稼働</button>
+            </div>
+
+            <!-- Stage 2: Pre-run Events -->
+            <div id="stage2PreEvent" class="button-area hidden">
+                <div class="timer-display paused">
+                    <div class="timer-label" id="preEventLabel">次Lotへ 準備中</div>
+                    <div class="timer-value" id="preEventTimer">0 分</div>
+                </div>
+                <button class="main-btn btn-start" id="preEventEndBtn">✓ 完了 → 稼働開始</button>
+            </div>
+
+            <!-- Stage 3: Shutdown -->
+            <div id="stage3" class="button-area hidden">
+                <div class="timer-display shutdown">
+                    <div class="timer-label">立ち下げ中</div>
+                    <div class="timer-value" id="shutdownTimer">0 分</div>
+                </div>
+                <button class="main-btn btn-shutdown" id="shutdownEndBtn">✓ 立ち下げ 完了</button>
+            </div>
+
+            <!-- Stage 3: Complete -->
+            <div id="stageComplete" class="button-area hidden">
+                <div style="text-align: center; padding: 30px; background: #f0fdf4; border-radius: 12px;">
+                    <div style="font-size: 2rem; margin-bottom: 8px;">🎉</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; color: var(--success);">本日の記録完了</div>
+                </div>
+                <button class="sub-btn" id="resetBtn" style="margin-top: 12px;">🔄 リセット（翌日用）</button>
+            </div>
+        </section>
+
+        <!-- Log -->
+        <section class="card">
+            <div class="card-header">📋 記録ログ</div>
+            <div class="log-container">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>時刻</th>
+                            <th>区分</th>
+                            <th>時間</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logBody"></tbody>
+                </table>
+            </div>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">稼働時間</div>
+                    <div class="kpi-value" id="kpiRun">0分</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">停止時間</div>
+                    <div class="kpi-value" id="kpiStop">0分</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">稼働率</div>
+                    <div class="kpi-value" id="kpiRate">--%</div>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="csvBtn">📥 CSV</button>
+                <button id="clearBtn">🗑️ クリア</button>
+                <button id="timelineBtn">📊 タイムライン</button>
+            </div>
+
+            <!-- Timeline Section -->
+            <div class="timeline-section hidden" id="timelineSection">
+                <div class="timeline-header">
+                    <span class="timeline-title">📊 ガントチャート</span>
+                    <span style="font-size: 0.75rem; color: var(--text-sub);">08:15 - 17:00</span>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-scale" id="timelineScale"></div>
+                    <div class="timeline-lane" id="timelineLane"></div>
+                </div>
+                <div class="timeline-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #a855f7;"></div>立ち上げ
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #22c55e;"></div>稼働
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #f59e0b;"></div>次Lotへ
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #ef4444;"></div>設備異常
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #6b7280;"></div>立ち下げ
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot"
+                            style="background: repeating-linear-gradient(45deg, #94a3b8, #94a3b8 2px, transparent 2px, transparent 4px);">
+                        </div>休憩(目安)
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // State
+        let state = {
+            stage: 1,          // 1=startup, 2=operation, 3=shutdown, 4=complete
+            subState: 'idle',  // idle, running, paused, preEvent
+            eventStart: null,
+            pauseType: null,
+            events: []
+        };
+
+        let timerInterval = null;
+
+        // DOM
+        const dateInput = document.getElementById('dateInput');
+        const productSelect = document.getElementById('productSelect');
+
+        // Helpers
+        function now() { return new Date(); }
+        function formatTime(d) { return d.toTimeString().slice(0, 5); }
+        function minutesBetween(s, e) { return Math.round((e - s) / 60000); }
+        function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+        // Timer
+        function startTimer(displayId) {
+            stopTimer();
+            updateTimerDisplay(displayId);
+            timerInterval = setInterval(() => updateTimerDisplay(displayId), 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        }
+
+        function updateTimerDisplay(displayId) {
+            if (state.eventStart) {
+                const mins = minutesBetween(state.eventStart, now());
+                document.getElementById(displayId).textContent = `${mins} 分`;
+            }
+        }
+
+        // UI State
+        function hideAll() {
+            ['stage1', 'stage1Running', 'stage2Idle', 'stage2Running', 'stage2Paused', 'stage2PreEvent', 'stage3', 'stageComplete'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+        }
+
+        function showState(stateId) {
+            hideAll();
+            document.getElementById(stateId).classList.remove('hidden');
+            updateStageIndicator();
+        }
+
+        function updateStageIndicator() {
+            const dots = ['stage1Dot', 'stage2Dot', 'stage3Dot'];
+            const labels = ['ステージ1: 立ち上げ', 'ステージ2: 通常作業', 'ステージ3: 立ち下げ'];
+
+            dots.forEach((id, i) => {
+                const dot = document.getElementById(id);
+                dot.classList.remove('active', 'completed');
+                if (i + 1 < state.stage) dot.classList.add('completed');
+                else if (i + 1 === state.stage) dot.classList.add('active');
+            });
+
+            if (state.stage <= 3) {
+                document.getElementById('stageLabel').textContent = labels[state.stage - 1];
+            } else {
+                document.getElementById('stageLabel').textContent = '完了';
+            }
+        }
+
+        // Event Recording
+        function addEvent(type, start, end, color) {
+            const duration = minutesBetween(start, end);
+            if (duration >= 0) {
+                state.events.push({
+                    date: dateInput.value,
+                    product: productSelect.value,
+                    type, start: formatTime(start), end: formatTime(end), duration, color
+                });
+                renderLog();
+                saveState();
+            }
+        }
+
+        // Stage 1: Startup
+        document.getElementById('startupBtn').addEventListener('click', () => {
+            state.eventStart = now();
+            showState('stage1Running');
+            startTimer('startupTimer');
+        });
+
+        document.getElementById('startupEndBtn').addEventListener('click', () => {
+            stopTimer();
+            addEvent('立ち上げ', state.eventStart, now(), '#a855f7');
+            state.stage = 2;
+            state.subState = 'idle';
+            state.eventStart = null;
+            showState('stage2Idle');
+        });
+
+        // Stage 2: Idle -> Running
+        document.getElementById('runStartBtn').addEventListener('click', () => {
+            state.eventStart = now();
+            state.subState = 'running';
+            showState('stage2Running');
+            startTimer('runTimer');
+        });
+
+        // Stage 2: Running -> Stop
+        document.getElementById('runStopBtn').addEventListener('click', () => {
+            stopTimer();
+            addEvent('稼働', state.eventStart, now(), '#22c55e');
+            state.subState = 'idle';
+            state.eventStart = null;
+            showState('stage2Idle');
+        });
+
+        // Stage 2: Running -> Pause (異常/部品交換)
+        document.getElementById('runningEvents').addEventListener('click', (e) => {
+            const btn = e.target.closest('.sub-btn');
+            if (!btn) return;
+            stopTimer();
+            addEvent('稼働', state.eventStart, now(), '#22c55e');
+            state.pauseType = btn.dataset.type;
+            state.eventStart = now();
+            state.subState = 'paused';
+            document.getElementById('pausedLabel').textContent = `${state.pauseType} 中`;
+            showState('stage2Paused');
+            startTimer('pausedTimer');
+        });
+
+        // Stage 2: Paused -> Resume
+        document.getElementById('resumeBtn').addEventListener('click', () => {
+            stopTimer();
+            addEvent(state.pauseType, state.eventStart, now(), getColor(state.pauseType));
+            state.eventStart = now();
+            state.subState = 'running';
+            showState('stage2Running');
+            startTimer('runTimer');
+        });
+
+        // Stage 2: Pre-run events (Lot切替, 段取り替え)
+        document.getElementById('stage2Idle').addEventListener('click', (e) => {
+            const btn = e.target.closest('.sub-btn');
+            if (!btn) return;
+            state.pauseType = btn.dataset.type;
+            state.eventStart = now();
+            state.subState = 'preEvent';
+            document.getElementById('preEventLabel').textContent = `${state.pauseType} 中`;
+            showState('stage2PreEvent');
+            startTimer('preEventTimer');
+        });
+
+        document.getElementById('preEventEndBtn').addEventListener('click', () => {
+            stopTimer();
+            addEvent(state.pauseType, state.eventStart, now(), getColor(state.pauseType));
+            state.eventStart = now();
+            state.subState = 'running';
+            showState('stage2Running');
+            startTimer('runTimer');
+        });
+
+        // Stage 3: Shutdown
+        document.getElementById('shutdownBtn').addEventListener('click', () => {
+            state.stage = 3;
+            state.eventStart = now();
+            showState('stage3');
+            startTimer('shutdownTimer');
+        });
+
+        document.getElementById('shutdownEndBtn').addEventListener('click', () => {
+            stopTimer();
+            addEvent('立ち下げ', state.eventStart, now(), '#6b7280');
+            state.stage = 4;
+            state.eventStart = null;
+            showState('stageComplete');
+        });
+
+        // Reset
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('リセットしますか？（ログは保持されます）')) {
+                state.stage = 1;
+                state.subState = 'idle';
+                state.eventStart = null;
+                showState('stage1');
+                saveState();
+            }
+        });
+
+        function getColor(type) {
+            const colors = {
+                '立ち上げ': '#a855f7', '立ち下げ': '#6b7280', '稼働': '#22c55e',
+                '次Lotへ': '#f59e0b',
+                '設備異常': '#ef4444', '部品交換': '#a855f7'
+            };
+            return colors[type] || '#888';
+        }
+
+        // Render Log
+        function renderLog() {
+            document.getElementById('logBody').innerHTML = state.events.map(ev => `
+                <tr>
+                    <td>${ev.start} - ${ev.end}</td>
+                    <td><span class="type-badge" style="background: ${ev.color}">${ev.type}</span></td>
+                    <td>${ev.duration}分</td>
+                </tr>
+            `).join('');
+
+            const runTime = state.events.filter(e => e.type === '稼働').reduce((a, b) => a + b.duration, 0);
+            const stopTime = state.events.filter(e => e.type !== '稼働').reduce((a, b) => a + b.duration, 0);
+            const total = runTime + stopTime;
+            const rate = total > 0 ? Math.round((runTime / total) * 100) : 0;
+
+            document.getElementById('kpiRun').textContent = `${runTime}分`;
+            document.getElementById('kpiStop').textContent = `${stopTime}分`;
+            document.getElementById('kpiRate').textContent = `${rate}%`;
+        }
+
+        // CSV
+        document.getElementById('csvBtn').addEventListener('click', () => {
+            const header = '日付,製品,区分,開始,終了,時間(分)\n';
+            const rows = state.events.map(e => `${e.date},${e.product},${e.type},${e.start},${e.end},${e.duration}`).join('\n');
+            const blob = new Blob([header + rows], { type: 'text/csv' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `time_record_${dateInput.value}.csv`; a.click();
+        });
+
+        // Clear
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (confirm('記録をクリアしますか？')) {
+                state.events = [];
+                state.stage = 1;
+                state.subState = 'idle';
+                showState('stage1');
+                renderLog();
+                saveState();
+            }
+        });
+
+        // Persistence
+        function saveState() {
+            localStorage.setItem('timeRecorderV2', JSON.stringify({
+                stage: state.stage, subState: state.subState, events: state.events,
+                date: dateInput.value, product: productSelect.value
+            }));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('timeRecorderV2');
+            if (saved) {
+                const data = JSON.parse(saved);
+                state.stage = data.stage || 1;
+                state.subState = data.subState || 'idle';
+                state.events = data.events || [];
+                if (data.date) dateInput.value = data.date;
+                if (data.product) productSelect.value = data.product;
+            }
+        }
+
+        // Init
+        dateInput.value = todayStr();
+        loadState();
+        renderLog();
+
+        // Restore UI state
+        if (state.stage === 1) showState('stage1');
+        else if (state.stage === 2) showState('stage2Idle');
+        else if (state.stage === 3) showState('stage3');
+        else showState('stageComplete');
+
+        // Timeline
+        const WORK_START = 8 * 60 + 15;  // 08:15 in minutes
+        const WORK_END = 17 * 60;        // 17:00 in minutes
+        const BREAKS = [
+            { start: 10 * 60, duration: 5, label: '休憩' },      // 10:00-10:05
+            { start: 11 * 60 + 45, duration: 45, label: '昼休憩' }, // 11:45-12:30
+            { start: 15 * 60, duration: 10, label: '休憩' }     // 15:00-15:10
+        ];
+
+        function timeToMinutes(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function renderTimeline() {
+            const scale = document.getElementById('timelineScale');
+            const lane = document.getElementById('timelineLane');
+            const totalMinutes = WORK_END - WORK_START;
+
+            // Clear
+            scale.innerHTML = '';
+            lane.innerHTML = '';
+
+            // Draw time scale (every hour)
+            for (let t = Math.ceil(WORK_START / 60) * 60; t <= WORK_END; t += 60) {
+                const pct = ((t - WORK_START) / totalMinutes) * 100;
+                const tick = document.createElement('span');
+                tick.className = 'timeline-tick';
+                tick.style.left = `${pct}%`;
+                tick.textContent = `${Math.floor(t / 60)}:00`;
+                scale.appendChild(tick);
+            }
+
+            // Draw break markers (background)
+            BREAKS.forEach(brk => {
+                const startPct = ((brk.start - WORK_START) / totalMinutes) * 100;
+                const widthPct = (brk.duration / totalMinutes) * 100;
+                if (startPct >= 0 && startPct < 100) {
+                    const marker = document.createElement('div');
+                    marker.className = 'timeline-break';
+                    marker.style.left = `${Math.max(0, startPct)}%`;
+                    marker.style.width = `${widthPct}%`;
+                    const label = document.createElement('span');
+                    label.className = 'timeline-break-label';
+                    label.textContent = brk.label;
+                    marker.appendChild(label);
+                    lane.appendChild(marker);
+                }
+            });
+
+            // Draw event bars
+            state.events.forEach(ev => {
+                const startMin = timeToMinutes(ev.start);
+                const endMin = timeToMinutes(ev.end);
+                const startPct = ((startMin - WORK_START) / totalMinutes) * 100;
+                const widthPct = ((endMin - startMin) / totalMinutes) * 100;
+
+                if (startPct >= 0 && widthPct > 0) {
+                    const bar = document.createElement('div');
+                    bar.className = 'timeline-bar';
+                    bar.style.left = `${Math.max(0, startPct)}%`;
+                    bar.style.width = `${Math.max(0.5, widthPct)}%`;
+                    bar.style.background = ev.color;
+                    bar.title = `${ev.start}-${ev.end} ${ev.type} (${ev.duration}分)`;
+                    if (widthPct > 8) {
+                        bar.textContent = ev.type;
+                    }
+                    lane.appendChild(bar);
+                }
+            });
+        }
+
+        // Timeline toggle button
+        let timelineVisible = false;
+        document.getElementById('timelineBtn').addEventListener('click', () => {
+            timelineVisible = !timelineVisible;
+            const section = document.getElementById('timelineSection');
+            section.classList.toggle('hidden', !timelineVisible);
+            if (timelineVisible) {
+                renderTimeline();
+            }
+        });
+    </script>
+</body>
+
+</html>
