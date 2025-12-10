@@ -571,8 +571,63 @@
             font-size: 1rem;
         }
 
+        /* Multi-Lane Styles */
+        .lane-container {
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: linear-gradient(to bottom, #f8fafc, white);
+        }
+
+        .lane-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .lane-title {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .lane-status {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .lane-status.running {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .lane-status.paused {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .lane-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Print Styles */
         /* Print Styles */
         @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
             body {
                 background: white !important;
             }
@@ -585,7 +640,9 @@
             .stage-label,
             .button-area,
             #adminSettings,
-            .card-header:has(+ .setting-row) {
+            .card-header:has(+ .setting-row),
+            #helpBtn,
+            #breakdownSection {
                 display: none !important;
             }
 
@@ -599,13 +656,49 @@
                 display: block !important;
             }
 
+            .timeline-bar {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                border: 1px solid rgba(0, 0, 0, 0.3) !important;
+            }
+
+            .timeline-lane {
+                border: 1px solid #ccc !important;
+            }
+
+            .type-badge {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                border: 1px solid rgba(0, 0, 0, 0.2) !important;
+            }
+
             .log-container {
                 max-height: none !important;
                 overflow: visible !important;
             }
 
+            .log-table th {
+                position: static !important;
+                background: #f3f4f6 !important;
+            }
+
             .kpi-grid {
                 page-break-inside: avoid;
+            }
+
+            .kpi-card {
+                border: 1px solid #ddd !important;
+            }
+
+            .memo-input {
+                border: none !important;
+                background: transparent !important;
+            }
+
+            .legend-dot {
+                border: 1px solid rgba(0, 0, 0, 0.3) !important;
             }
         }
     </style>
@@ -630,6 +723,16 @@
                         <option value="2L">2L</option>
                         <option value="2LH">2LH</option>
                     </select></label>
+                <label>工程数<select id="laneCount">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select></label>
+            </div>
+            <div id="laneNames" style="margin-top: 8px;">
+                <div class="setting-row">
+                    <label>工程1<input type="text" id="lane1Name" value="ラミネート" style="width: 120px;"></label>
+                </div>
             </div>
 
             <!-- Admin Settings (hidden by default) -->
@@ -745,9 +848,15 @@
             </div>
         </section>
 
+        <!-- Multi-Lane Container (工程別レーン) -->
+        <section class="card hidden" id="lanesSection">
+            <div class="card-header">🏭 工程別レーン</div>
+            <div id="lanesContainer"></div>
+        </section>
+
         <!-- Log -->
         <section class="card">
-            <div class="card-header">📋 記録ログ</div>
+            <div class="card-header">📋 稼働ログ</div>
             <div class="log-container">
                 <table class="log-table">
                     <thead>
@@ -910,14 +1019,191 @@
             subState: 'idle',  // idle, running, paused, preEvent
             eventStart: null,
             pauseType: null,
-            events: []
+            pauseReason: '',
+            events: [],
+            // Multi-lane state
+            lanes: [
+                { id: 1, name: 'ラミネート', status: 'idle', eventStart: null, pauseType: null, timerId: null }
+            ]
         };
 
         let timerInterval = null;
+        let laneTimers = {};
 
         // DOM
         const dateInput = document.getElementById('dateInput');
         const productSelect = document.getElementById('productSelect');
+        const laneCountSelect = document.getElementById('laneCount');
+        const lanesContainer = document.getElementById('lanesContainer');
+        const lanesSection = document.getElementById('lanesSection');
+        const laneNamesDiv = document.getElementById('laneNames');
+
+        // Lane count change handler
+        laneCountSelect.addEventListener('change', () => {
+            const count = parseInt(laneCountSelect.value);
+            updateLaneNameInputs(count);
+            initializeLanes(count);
+        });
+
+        function updateLaneNameInputs(count) {
+            let html = '';
+            for (let i = 1; i <= count; i++) {
+                const currentName = state.lanes[i - 1]?.name || `工程${i}`;
+                html += `<div class="setting-row">
+                    <label>工程${i}<input type="text" id="lane${i}Name" value="${currentName}" style="width: 120px;"></label>
+                </div>`;
+            }
+            laneNamesDiv.innerHTML = html;
+
+            // Add change listeners
+            for (let i = 1; i <= count; i++) {
+                document.getElementById(`lane${i}Name`).addEventListener('change', (e) => {
+                    if (state.lanes[i - 1]) {
+                        state.lanes[i - 1].name = e.target.value;
+                        renderLanes();
+                        saveState();
+                    }
+                });
+            }
+        }
+
+        function initializeLanes(count) {
+            state.lanes = [];
+            for (let i = 1; i <= count; i++) {
+                const nameInput = document.getElementById(`lane${i}Name`);
+                state.lanes.push({
+                    id: i,
+                    name: nameInput ? nameInput.value : `工程${i}`,
+                    status: 'idle',
+                    eventStart: null,
+                    pauseType: null,
+                    timerId: null
+                });
+            }
+            renderLanes();
+            saveState();
+        }
+
+        function renderLanes() {
+            if (state.stage !== 2 || state.lanes.length <= 1) {
+                lanesSection.classList.add('hidden');
+                return;
+            }
+
+            lanesSection.classList.remove('hidden');
+            lanesContainer.innerHTML = state.lanes.map((lane, idx) => `
+                <div class="lane-container" data-lane-id="${lane.id}">
+                    <div class="lane-header">
+                        <span class="lane-title">${lane.name}</span>
+                        <span class="lane-status ${lane.status}">${getStatusText(lane.status)}</span>
+                    </div>
+                    <div class="lane-buttons">
+                        ${getLaneButtons(lane)}
+                    </div>
+                    <div class="lane-timer" id="laneTimer${lane.id}" style="font-size: 1.5rem; font-weight: bold; color: var(--primary); text-align: center; margin-top: 8px; ${lane.status === 'idle' ? 'display: none;' : ''}">0 分</div>
+                </div>
+            `).join('');
+
+            attachLaneEventListeners();
+            startLaneTimers();
+        }
+
+        function getStatusText(status) {
+            const texts = { idle: '待機中', running: '稼働中', paused: '一時停止' };
+            return texts[status] || status;
+        }
+
+        function getLaneButtons(lane) {
+            if (lane.status === 'idle') {
+                return `<button class="main-btn btn-start lane-start-btn" data-lane="${lane.id}">▶️ 稼働開始</button>`;
+            } else if (lane.status === 'running') {
+                return `
+                    <button class="main-btn btn-stop lane-stop-btn" data-lane="${lane.id}">⏹️ 稼働終了</button>
+                    <button class="sub-btn lane-pause-btn" data-lane="${lane.id}" data-type="設備異常"><span class="dot" style="background: #ef4444"></span>設備異常</button>
+                    <button class="sub-btn lane-pause-btn" data-lane="${lane.id}" data-type="部品交換"><span class="dot" style="background: #a855f7"></span>部品交換</button>
+                `;
+            } else if (lane.status === 'paused') {
+                return `<button class="main-btn btn-start lane-resume-btn" data-lane="${lane.id}">▶️ 再稼働</button>`;
+            }
+            return '';
+        }
+
+        function attachLaneEventListeners() {
+            document.querySelectorAll('.lane-start-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const laneId = parseInt(e.target.dataset.lane);
+                    const lane = state.lanes.find(l => l.id === laneId);
+                    if (lane) {
+                        lane.status = 'running';
+                        lane.eventStart = now();
+                        renderLanes();
+                        saveState();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.lane-stop-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const laneId = parseInt(e.target.dataset.lane);
+                    const lane = state.lanes.find(l => l.id === laneId);
+                    if (lane) {
+                        addEvent(`${lane.name} 稼働`, lane.eventStart, now(), '#22c55e');
+                        lane.status = 'idle';
+                        lane.eventStart = null;
+                        clearInterval(laneTimers[laneId]);
+                        renderLanes();
+                        saveState();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.lane-pause-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const laneId = parseInt(e.target.dataset.lane);
+                    const pauseType = e.target.dataset.type;
+                    const lane = state.lanes.find(l => l.id === laneId);
+                    if (lane) {
+                        const reason = prompt(`${pauseType}の理由を入力してください（空欄可）:`, '');
+                        addEvent(`${lane.name} 稼働`, lane.eventStart, now(), '#22c55e');
+                        lane.status = 'paused';
+                        lane.pauseType = pauseType;
+                        lane.pauseReason = reason || '';
+                        lane.eventStart = now();
+                        renderLanes();
+                        saveState();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.lane-resume-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const laneId = parseInt(e.target.dataset.lane);
+                    const lane = state.lanes.find(l => l.id === laneId);
+                    if (lane) {
+                        addEvent(`${lane.name} ${lane.pauseType}`, lane.eventStart, now(), getColor(lane.pauseType), lane.pauseReason || '');
+                        lane.status = 'running';
+                        lane.pauseReason = '';
+                        lane.eventStart = now();
+                        renderLanes();
+                        saveState();
+                    }
+                });
+            });
+        }
+
+        function startLaneTimers() {
+            state.lanes.forEach(lane => {
+                if (lane.status !== 'idle' && lane.eventStart) {
+                    clearInterval(laneTimers[lane.id]);
+                    laneTimers[lane.id] = setInterval(() => {
+                        const el = document.getElementById(`laneTimer${lane.id}`);
+                        if (el) {
+                            el.textContent = `${minutesBetween(lane.eventStart, now())} 分`;
+                        }
+                    }, 1000);
+                }
+            });
+        }
 
         // Helpers
         function now() { return new Date(); }
@@ -954,6 +1240,13 @@
             hideAll();
             document.getElementById(stateId).classList.remove('hidden');
             updateStageIndicator();
+
+            // Show multi-lane section in stage 2 if multiple lanes configured
+            if (state.stage === 2 && state.lanes.length > 1) {
+                renderLanes();
+            } else {
+                lanesSection.classList.add('hidden');
+            }
         }
 
         function updateStageIndicator() {
@@ -975,13 +1268,13 @@
         }
 
         // Event Recording
-        function addEvent(type, start, end, color) {
+        function addEvent(type, start, end, color, memo = '') {
             const duration = minutesBetween(start, end);
             if (duration >= 0) {
                 state.events.push({
                     date: dateInput.value,
                     product: productSelect.value,
-                    type, start: formatTime(start), end: formatTime(end), duration, color
+                    type, start: formatTime(start), end: formatTime(end), duration, color, memo
                 });
                 renderLog();
                 saveState();
@@ -1025,9 +1318,14 @@
         document.getElementById('runningEvents').addEventListener('click', (e) => {
             const btn = e.target.closest('.sub-btn');
             if (!btn) return;
+
+            // 停止理由を入力
+            const reason = prompt(`${btn.dataset.type}の理由を入力してください（空欄可）:`, '');
+
             stopTimer();
             addEvent('稼働', state.eventStart, now(), '#22c55e');
             state.pauseType = btn.dataset.type;
+            state.pauseReason = reason || '';
             state.eventStart = now();
             state.subState = 'paused';
             document.getElementById('pausedLabel').textContent = `${state.pauseType} 中`;
@@ -1038,7 +1336,8 @@
         // Stage 2: Paused -> Resume
         document.getElementById('resumeBtn').addEventListener('click', () => {
             stopTimer();
-            addEvent(state.pauseType, state.eventStart, now(), getColor(state.pauseType));
+            addEvent(state.pauseType, state.eventStart, now(), getColor(state.pauseType), state.pauseReason || '');
+            state.pauseReason = '';
             state.eventStart = now();
             state.subState = 'running';
             showState('stage2Running');
@@ -1179,8 +1478,8 @@
 
         // CSV
         document.getElementById('csvBtn').addEventListener('click', () => {
-            const header = '日付,製品,区分,開始,終了,時間(分)\n';
-            const rows = state.events.map(e => `${e.date},${e.product},${e.type},${e.start},${e.end},${e.duration}`).join('\n');
+            const header = '日付,製品,区分,開始,終了,時間(分),メモ\n';
+            const rows = state.events.map(e => `${e.date},${e.product},${e.type},${e.start},${e.end},${e.duration},"${e.memo || ''}"`).join('\n');
             const blob = new Blob([header + rows], { type: 'text/csv' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
             a.download = `time_record_${dateInput.value}.csv`; a.click();
