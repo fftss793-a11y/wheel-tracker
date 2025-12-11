@@ -9,23 +9,28 @@
     :root {
       --stage: 480px;
       --outerR: 175;
-      /* 操作項目：外半径 */
       --innerR: 85;
-      /* 操作項目：内半径（描画なし） */
       --lineOuterR: 210;
-      /* ライン：外半径 */
       --lineInnerR: 185;
-      /* ライン：内半径 */
-      --color-ring: #0f172a;
-      --bg: #f6f8fb;
-      /* ライン色（IDごと） */
-      --A: #1d4ed8;
-      --B: #059669;
-      --C: #d97706;
-      --D: #7c3aed;
-      --E: #dc2626;
-      --fab-idle: #1976d2;
-      --fab-on: #ff8f00;
+      /* Blue-White Theme */
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --primary-dark: #1e3a8a;
+      --accent: #0ea5e9;
+      --color-ring: #1e40af;
+      --bg: #f0f9ff;
+      --bg-white: #ffffff;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --border: #bfdbfe;
+      /* ライン色（すべて青系統） */
+      --A: #1e40af;
+      --B: #2563eb;
+      --C: #3b82f6;
+      --D: #0284c7;
+      --E: #0ea5e9;
+      --fab-idle: #1e40af;
+      --fab-on: #0ea5e9;
     }
 
     body {
@@ -35,78 +40,146 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      min-height: 100vh;
     }
 
     body.modal-open {
       overflow: hidden;
     }
 
-    /* モーダル表示中はスクロール禁止 */
+    /* Header with line tabs */
+    .header {
+      width: 100%;
+      background: var(--primary);
+      padding: 12px 0;
+      box-shadow: 0 4px 16px rgba(30, 64, 175, 0.2);
+    }
 
-    /* Top bar */
-    .topbar {
-      width: min(1000px, 95vw);
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
       display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .btn {
-      padding: 8px 12px;
-      border: 1px solid #0f172a;
-      border-radius: 10px;
-      background: #fff;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    /* Status cards */
-    .status {
-      width: min(1000px, 95vw);
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(5, 1fr);
-    }
-
-    .card {
-      border: 1px solid #e0e4ea;
-      border-radius: 10px;
-      background: #fff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
-      padding: 8px 10px;
-      min-height: 84px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .card.active {
-      outline: 2px solid #409eff;
-    }
-
-    .card h3 {
-      margin: 0 6px 6px 0;
-      font-size: 14px;
-      display: flex;
-      gap: 8px;
+      justify-content: space-between;
       align-items: center;
     }
 
-    .task {
-      font-size: 13px;
-      color: #333;
+    .header-title {
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .time {
-      font: 12px/1.6 monospace;
-      color: #666;
+    .header-actions {
+      display: flex;
+      gap: 8px;
     }
 
-    .hint {
-      font-size: 11px;
-      color: #888;
-      margin-left: auto;
+    .btn {
+      padding: 8px 16px;
+      border: 2px solid white;
+      border-radius: 8px;
+      background: transparent;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: white;
+      color: var(--primary);
+    }
+
+    /* Line tabs (horizontal selector at top) */
+    .line-tabs {
+      width: 100%;
+      background: var(--bg-white);
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 16px;
+    }
+
+    .line-tab {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: var(--text-light);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+    }
+
+    .line-tab:hover {
+      background: var(--bg);
+      color: var(--primary);
+    }
+
+    .line-tab.active {
+      color: var(--primary);
+      background: var(--bg);
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .line-tab .tab-status {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-left: 8px;
+    }
+
+    .line-tab.active .tab-status {
+      color: var(--accent);
+    }
+
+    /* Main content area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    /* Current status display */
+    .current-status {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .current-line-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .current-task {
+      font-size: 1.1rem;
+      color: var(--text-light);
+    }
+
+    .current-time {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-light);
+      font-family: monospace;
+    }
+
+    /* Hide old status cards - replaced by tabs */
+    .status {
+      display: none;
     }
 
     .badge {
@@ -538,25 +611,43 @@
 
 <body>
 
-  <!-- Top bar -->
-  <div class="topbar">
-    <button id="openLogFullscreen" class="btn">ログ（全画面）</button>
-    <button id="exportCsv" class="btn">CSV</button>
-    <button id="openSettings" class="btn">設定</button>
+  <!-- Header with actions -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-title">
+        ⏱️ タイムロガー
+      </div>
+      <div class="header-actions">
+        <button id="openLogFullscreen" class="btn">📋 ログ</button>
+        <button id="exportCsv" class="btn">📥 CSV</button>
+        <button id="openSettings" class="btn">⚙️ 設定</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Line tabs (horizontal selector) -->
+  <div class="line-tabs" id="lineTabs">
+    <!-- Populated by JS -->
   </div>
 
-  <!-- Status cards -->
+  <!-- Current status display -->
+  <div class="current-status" id="currentStatus">
+    <div class="current-line-name" id="currentLineName">ライン1</div>
+    <div class="current-task" id="currentTask">待機中</div>
+    <div class="current-time" id="currentTime">--:--</div>
+  </div>
+
+  <!-- Hidden old status container for compatibility -->
   <div id="status" class="status"></div>
 
   <!-- 3-layer wheel -->
   <div class="wrap" role="application" aria-label="3層ホイール">
     <svg id="wheel" class="wheel" viewBox="-210 -210 420 420" aria-hidden="false">
-      <!-- 内周（操作項目）ガイド -->
       <circle class="ringOuter" cx="0" cy="0" r="175" />
       <g id="spokes"></g>
       <g id="segments"></g>
 
-      <!-- 外周（ライン）—右クリックで開閉 -->
+      <!-- Outer ring for line selection (hidden by default, right-click to show) -->
       <g id="lineRing" class="lineRing">
         <circle class="lineGuide" cx="0" cy="0" r="210" />
         <circle class="lineGuide" cx="0" cy="0" r="185" />
@@ -783,7 +874,36 @@
     function loadConfig() { try { return JSON.parse(localStorage.getItem('wheel_config') || 'null'); } catch (e) { return null; } }
     function saveConfig(c) { localStorage.setItem('wheel_config', JSON.stringify(c)); }
 
-    /* ====== Status ====== */
+    /* ====== Status - Line Tabs (horizontal selector at top) ====== */
+    const lineTabsEl = document.getElementById('lineTabs');
+    const currentLineNameEl = document.getElementById('currentLineName');
+    const currentTaskEl = document.getElementById('currentTask');
+    const currentTimeEl = document.getElementById('currentTime');
+
+    function renderLineTabs() {
+      lineTabsEl.innerHTML = '';
+      LINES.forEach(line => {
+        const conf = config.lines[line] || defaults.lines[line];
+        const name = conf.name || `ライン${line}`;
+        const a = activeByLine[line];
+        const tab = document.createElement('button');
+        tab.className = 'line-tab' + (line === currentLine ? ' active' : '');
+        tab.innerHTML = `${name}<span class="tab-status">${a ? '●' : ''}</span>`;
+        tab.addEventListener('click', () => setLine(line));
+        lineTabsEl.appendChild(tab);
+      });
+    }
+
+    function updateCurrentStatus() {
+      const conf = config.lines[currentLine] || defaults.lines[currentLine];
+      const name = conf.name || `ライン${currentLine}`;
+      const a = activeByLine[currentLine];
+      currentLineNameEl.textContent = name;
+      currentTaskEl.textContent = a ? a.task : '待機中';
+      currentTimeEl.textContent = a ? elapsedStr(a.startedAt, Date.now()) : '--:--';
+    }
+
+    // Keep old renderStatus for compatibility (hidden by CSS)
     function renderStatus() {
       statusEl.innerHTML = '';
       LINES.forEach(line => {
@@ -802,8 +922,13 @@
         card.addEventListener('click', () => setLine(line));
         statusEl.appendChild(card);
       });
+      // Also update line tabs and current status
+      renderLineTabs();
+      updateCurrentStatus();
     }
+
     setInterval(() => {
+      updateCurrentStatus(); // Update current status timer
       LINES.forEach(line => {
         const el = document.getElementById(`t_${line}`); if (!el) return;
         const a = activeByLine[line]; el.textContent = a ? elapsedStr(a.startedAt, Date.now()) : '-';
