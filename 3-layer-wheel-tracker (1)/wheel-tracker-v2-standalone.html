@@ -536,12 +536,12 @@
                         </div>
                     </header>
 
-                    <main className="flex-1 flex flex-col items-center justify-center w-full relative z-20 scale-90 sm:scale-100 xl:scale-110">
-                        {isEditMode && <div className="absolute -top-10 text-blue-400 text-sm font-bold animate-bounce uppercase tracking-widest">Click Ring to Edit Line</div>}
+                    <main className="flex-1 flex flex-col items-center justify-center w-full relative z-20 scale-[0.8] sm:scale-90 xl:scale-100">
+                        {isEditMode && <div className="absolute -top-6 text-blue-400 text-sm font-bold animate-bounce uppercase tracking-widest">Click Ring to Edit Line</div>}
                         <Wheel currentLine={currentLine} categories={lineConf.categories} lineNames={Object.fromEntries(LINES.map(l => [l, config.lines[l].name]))} isTracking={!!currentSession} currentTask={currentSession?.task || ''} activeSessions={activeSessions} isEditMode={isEditMode} onTaskClick={handleWheelTaskClick} onLineClick={handleWheelLineClick} onCenterClick={handleCenterClick} />
                     </main>
 
-                    <div className={`w-full max-w-[500px] z-30 mb-8 ${isEditMode ? 'cursor-pointer hover:scale-105' : ''}`} onClick={() => isEditMode && setIsGlobalSettingsOpen(true)}>
+                    <div className={`w-full max-w-[500px] z-30 mb-4 mt-4 ${isEditMode ? 'cursor-pointer hover:scale-105' : ''}`} onClick={() => isEditMode && setIsGlobalSettingsOpen(true)}>
                         <div className={`bg-slate-900/80 backdrop-blur-md border rounded-2xl p-6 shadow-2xl relative overflow-hidden ${isEditMode ? 'border-blue-500/50 border-dashed' : 'border-slate-800'}`}>
                             {isEditMode && <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-blue-400 font-black text-xl tracking-widest z-50">EDIT GLOBAL SETTINGS</div>}
                             <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: currentColor }}></div>
