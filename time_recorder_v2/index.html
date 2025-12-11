@@ -207,10 +207,10 @@
 
         /* Lane Styles */
         .lane {
-            border: 2px solid var(--primary);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 14px;
+            border: 3px solid var(--primary);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 20px;
             background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
         }
 
@@ -225,7 +225,7 @@
 
         .lane-title {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 2rem;
             color: var(--primary);
         }
 
@@ -237,9 +237,9 @@
         }
 
         .lane-status {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+            padding: 12px 28px;
+            border-radius: 24px;
+            font-size: 1.3rem;
             font-weight: 600;
         }
 
@@ -279,11 +279,11 @@
         }
 
         .lane-timer {
-            font-size: 2rem;
+            font-size: 4rem;
             font-weight: bold;
             color: var(--primary);
             text-align: center;
-            margin: 12px 0;
+            margin: 24px 0;
         }
 
         .lane-buttons {
@@ -341,17 +341,17 @@
             display: none !important;
         }
 
-        /* Simple Mode */
+        /* Simple Mode - 2x larger */
         #simpleMode .stage-indicator {
             display: flex;
             justify-content: center;
-            gap: 40px;
-            margin-bottom: 16px;
+            gap: 80px;
+            margin-bottom: 32px;
         }
 
         #simpleMode .stage-dot {
-            width: 16px;
-            height: 16px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: #e5e7eb;
         }
@@ -367,24 +367,46 @@
         #simpleMode .stage-label {
             text-align: center;
             font-weight: 600;
+            font-size: 1.6rem;
             color: var(--primary);
-            margin-bottom: 20px;
+            margin-bottom: 40px;
         }
 
         #simpleMode .button-area {
             text-align: center;
-            padding: 20px;
+            padding: 40px;
         }
 
         #simpleMode .timer-display {
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 32px;
         }
 
         #simpleMode .timer-value {
-            font-size: 2.5rem;
+            font-size: 5rem;
             font-weight: bold;
             color: var(--primary);
+        }
+
+        #simpleMode .btn {
+            padding: 24px 48px;
+            font-size: 1.8rem;
+        }
+
+        #simpleMode .btn-small {
+            padding: 16px 32px;
+            font-size: 1.3rem;
+        }
+
+        /* Multi-Lane Mode - 2x larger */
+        #multiMode .btn {
+            padding: 24px 48px;
+            font-size: 1.8rem;
+        }
+
+        #multiMode .btn-small {
+            padding: 16px 32px;
+            font-size: 1.3rem;
         }
 
         /* Log Table */
@@ -512,7 +534,7 @@
                             <option value="3">3</option>
                         </select></label>
                 </div>
-                <div id="laneNames"></div>
+                <div id="laneSettings"></div>
             </div>
         </div>
     </div>
@@ -614,6 +636,17 @@
                     <button class="btn btn-primary btn-small" onclick="simpleAction('pause', '部品交換')">🔧 部品交換</button>
                 </div>
             </div>
+            <div id="s_lotComplete" class="button-area hidden">
+                <div
+                    style="text-align: center; padding: 20px; background: #f0fdf4; border-radius: 12px; margin-bottom: 16px;">
+                    <div style="font-size: 1.5rem;">✅</div>
+                    <div style="font-size: 1.1rem; font-weight: 600; color: var(--success);">Lot完了</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                    <button class="btn btn-success" onclick="simpleAction('startLotSwitch')">➡️ 次Lot切替</button>
+                    <button class="btn btn-shutdown" onclick="simpleAction('startShutdown')">⏹️ 立ち下げ 開始</button>
+                </div>
+            </div>
             <div id="s_lotSwitch" class="button-area hidden">
                 <div class="timer-display">
                     <div class="timer-value" id="sTimerLotSwitch">0 分</div>
@@ -642,7 +675,9 @@
             <div id="s_complete" class="button-area hidden">
                 <div style="text-align: center; padding: 30px; background: #f0fdf4; border-radius: 12px;">
                     <div style="font-size: 2rem;">🎉</div>
-                    <div style="font-size: 1.2rem; font-weight: 600; color: var(--success);">完了</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; color: var(--success);">おつかれさま</div>
+                    <button class="btn btn-primary" style="margin-top: 16px;" onclick="resetSimpleMode()">🔄
+                        リセット</button>
                 </div>
             </div>
         </section>
@@ -891,11 +926,14 @@
                     runStart: null,
                     pauseType: null
                 });
-                namesHtml += `<div class="setting-row" style="margin-top: 4px;">
-                    <label>工程${i}名<input type="text" id="laneName${i}" value="工程${i}" style="width: 120px;" onchange="updateLaneName(${i})"></label>
+                namesHtml += `<div class="setting-row" style="margin-top: 8px;">
+                    <label>工程${i}名<input type="text" id="laneName${i}" value="工程${i}" style="width: 100px;" onchange="updateLaneName(${i})"></label>
+                    <label>サイズ<select id="laneSize${i}" onchange="updateLaneSize(${i})">
+                        ${SIZES.map(s => `<option value="${s}" ${s === sizeSelect.value ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select></label>
                 </div>`;
             }
-            document.getElementById('laneNames').innerHTML = namesHtml;
+            document.getElementById('laneSettings').innerHTML = namesHtml;
             renderLanes();
         }
 
@@ -913,10 +951,10 @@
             container.innerHTML = lanes.map(lane => `
                 <div class="lane" id="lane${lane.id}">
                     <div class="lane-header">
-                        <span class="lane-title">${lane.name}</span>
-                        <select class="lane-size-select" id="laneSize${lane.id}" onchange="updateLaneSize(${lane.id})">
-                            ${SIZES.map(s => `<option value="${s}" ${s === lane.size ? 'selected' : ''}>${s}</option>`).join('')}
-                        </select>
+                        <div style="display: flex; flex-direction: column;">
+                            <span class="lane-title">${lane.name}</span>
+                            <span style="font-size: 0.9rem; color: var(--primary);">${lane.size}</span>
+                        </div>
                         <span class="lane-status ${lane.status}">${getStatusLabel(lane.status)}</span>
                     </div>
                     <div class="lane-timer" id="laneTimer${lane.id}" style="${lane.status === 'idle' || lane.status === 'complete' ? 'display: none;' : ''}">0 分</div>
@@ -933,7 +971,31 @@
             const lane = lanes.find(l => l.id === id);
             if (lane && select) {
                 lane.size = select.value;
+                renderLanes();
             }
+        }
+
+        function resetLane(id) {
+            const lane = lanes.find(l => l.id === id);
+            if (lane) {
+                lane.status = 'idle';
+                lane.eventStart = null;
+                lane.runStart = null;
+                lane.pauseType = null;
+                renderLanes();
+            }
+        }
+
+        function resetSimpleMode() {
+            clearInterval(simpleTimer);
+            simpleState = {
+                status: 'idle',
+                eventStart: null,
+                runStart: null,
+                pauseType: null
+            };
+            showSimpleState('s_idle');
+            updateSimpleStage(1);
         }
 
         function getStatusLabel(status) {
@@ -941,6 +1003,7 @@
                 idle: '待機中',
                 startup: '立ち上げ中',
                 running: '稼働中',
+                lotComplete: 'Lot完了',
                 lotSwitch: '次Lot切替中',
                 paused: '一時停止',
                 shutdown: '立ち下げ中',
@@ -965,6 +1028,16 @@
                             </div>
                         </div>
                     `;
+                case 'lotComplete':
+                    return `
+                        <div style="text-align: center; padding: 12px; background: #f0fdf4; border-radius: 12px; margin-bottom: 10px;">
+                            <div style="font-size: 1.2rem;">✅ Lot完了</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                            <button class="btn btn-success" onclick="laneAction(${lane.id}, 'startLotSwitch')">➡️ 次Lot切替</button>
+                            <button class="btn btn-shutdown" onclick="laneAction(${lane.id}, 'startShutdown')">⏹️ 立ち下げ開始</button>
+                        </div>
+                    `;
                 case 'lotSwitch':
                     return `
                         <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
@@ -977,7 +1050,7 @@
                 case 'shutdown':
                     return `<button class="btn btn-shutdown" onclick="laneAction(${lane.id}, 'endShutdown')">✓ 立ち下げ完了</button>`;
                 case 'complete':
-                    return `<div style="color: var(--success); font-weight: 600;">🎉 完了</div>`;
+                    return `<div style="text-align: center;"><div style="color: var(--success); font-weight: 600;">🎉 おつかれさま</div><button class="btn btn-primary btn-small" style="margin-top: 10px;" onclick="resetLane(${lane.id})">🔄 リセット</button></div>`;
                 default:
                     return `<button class="btn btn-success" onclick="laneAction(${lane.id}, 'startRun')">▶️ 稼働開始</button>`;
             }
@@ -1011,6 +1084,10 @@
                 case 'lotComplete':
                     addLog('稼働', lane.name, '', lane.runStart, currentTime);
                     addLog('Lot完了', lane.name, '', currentTime, currentTime);
+                    lane.status = 'lotComplete';
+                    lane.eventStart = null;
+                    break;
+                case 'startLotSwitch':
                     lane.status = 'lotSwitch';
                     lane.eventStart = currentTime;
                     break;
@@ -1096,6 +1173,11 @@
                 case 'lotComplete':
                     addLog('稼働', laneName, '', simpleState.runStart, currentTime);
                     addLog('Lot完了', laneName, '', currentTime, currentTime);
+                    simpleState.status = 'lotComplete';
+                    simpleState.eventStart = null;
+                    showSimpleState('s_lotComplete');
+                    break;
+                case 'startLotSwitch':
                     simpleState.status = 'lotSwitch';
                     simpleState.eventStart = currentTime;
                     showSimpleState('s_lotSwitch');
@@ -1140,7 +1222,7 @@
         }
 
         function showSimpleState(stateId) {
-            ['s_idle', 's_startup', 's_ready', 's_running', 's_lotSwitch', 's_paused', 's_shutdown', 's_complete'].forEach(id => {
+            ['s_idle', 's_startup', 's_ready', 's_running', 's_lotComplete', 's_lotSwitch', 's_paused', 's_shutdown', 's_complete'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(stateId).classList.remove('hidden');
@@ -1167,7 +1249,7 @@
                 else if (i + 1 === stage) dot.classList.add('active');
             });
 
-            document.getElementById('sLabel').textContent = labels[stage - 1] || '完了';
+            document.getElementById('sLabel').textContent = labels[stage - 1] || 'おつかれさま';
         }
     </script>
 </body>
