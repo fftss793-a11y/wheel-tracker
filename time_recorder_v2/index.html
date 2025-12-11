@@ -1,1257 +1,1246 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <title>工程タイムレコーダー V2</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #6366f1;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --text: #1f2937;
-            --text-sub: #6b7280;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --border: #e5e7eb;
-        }
-
-        body {
-            font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            margin-bottom: 16px;
-        }
-
-        header h1 {
-            font-size: 1.2rem;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .header-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.9rem;
-            color: var(--text-sub);
-        }
-
-        .header-date {
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .header-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .header-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .header-btn.log-btn {
-            background: #10b981;
-        }
-
-        .header-btn.help-btn {
-            background: #8b5cf6;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal-overlay.hidden {
-            display: none;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow: auto;
-        }
-
-        .modal-content.wide {
-            max-width: 900px;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .modal-close {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        main {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .card-header {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 12px;
-            color: var(--text);
-        }
-
-        .setting-row {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .setting-row label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-        }
-
-        .setting-row input,
-        .setting-row select {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-
-        .mode-toggle {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .mode-btn {
-            padding: 10px 20px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            background: white;
-            transition: all 0.2s;
-        }
-
-        .mode-btn.active {
-            border-color: var(--primary);
-            background: #eef2ff;
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        /* Lane Styles */
-        .lane {
-            border: 3px solid var(--primary);
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-        }
-
-        .lane-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .lane-title {
-            font-weight: 700;
-            font-size: 2rem;
-            color: var(--primary);
-        }
-
-        .lane-size-select {
-            padding: 4px 8px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.85rem;
-        }
-
-        .lane-status {
-            padding: 12px 28px;
-            border-radius: 24px;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .lane-status.idle {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .lane-status.startup {
-            background: #faf5ff;
-            color: #a855f7;
-        }
-
-        .lane-status.running {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        .lane-status.paused {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .lane-status.shutdown {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .lane-status.complete {
-            background: #dbeafe;
-            color: #2563eb;
-        }
-
-        .lane-status.lotSwitch {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .lane-timer {
-            font-size: 4rem;
-            font-weight: bold;
-            color: var(--primary);
-            text-align: center;
-            margin: 24px 0;
-        }
-
-        .lane-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-shutdown {
-            background: #6b7280;
-            color: white;
-        }
-
-        .btn:hover {
-            transform: scale(1.02);
-        }
-
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 0.85rem;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Simple Mode - 2x larger */
-        #simpleMode .stage-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 80px;
-            margin-bottom: 32px;
-        }
-
-        #simpleMode .stage-dot {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #e5e7eb;
-        }
-
-        #simpleMode .stage-dot.active {
-            background: var(--primary);
-        }
-
-        #simpleMode .stage-dot.done {
-            background: var(--success);
-        }
-
-        #simpleMode .stage-label {
-            text-align: center;
-            font-weight: 600;
-            font-size: 1.6rem;
-            color: var(--primary);
-            margin-bottom: 40px;
-        }
-
-        #simpleMode .button-area {
-            text-align: center;
-            padding: 40px;
-        }
-
-        #simpleMode .timer-display {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        #simpleMode .timer-value {
-            font-size: 5rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        #simpleMode .btn {
-            padding: 24px 48px;
-            font-size: 1.8rem;
-        }
-
-        #simpleMode .btn-small {
-            padding: 16px 32px;
-            font-size: 1.3rem;
-        }
-
-        /* Multi-Lane Mode - 2x larger */
-        #multiMode .btn {
-            padding: 24px 48px;
-            font-size: 1.8rem;
-        }
-
-        #multiMode .btn-small {
-            padding: 16px 32px;
-            font-size: 1.3rem;
-        }
-
-        /* Log Table */
-        .log-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        .log-table th,
-        .log-table td {
-            border: 1px solid var(--border);
-            padding: 8px;
-            text-align: left;
-        }
-
-        .log-table th {
-            background: #f3f4f6;
-            font-weight: 600;
-        }
-
-        .log-table tr:nth-child(even) {
-            background: #f9fafb;
-        }
-
-        .log-table tr.trouble {
-            background: #fef2f2;
-        }
-
-        .log-actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .log-empty {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-sub);
-        }
-
-        /* Help styles */
-        .help-section {
-            margin-bottom: 20px;
-        }
-
-        .help-section h3 {
-            color: var(--primary);
-            margin-bottom: 8px;
-            font-size: 1rem;
-        }
-
-        .help-section p,
-        .help-section li {
-            font-size: 0.9rem;
-            color: var(--text-sub);
-            line-height: 1.6;
-        }
-
-        .help-section ul {
-            padding-left: 20px;
-        }
-
-        .help-flow {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            padding: 12px;
-            background: #f3f4f6;
-            border-radius: 8px;
-            font-size: 0.85rem;
-        }
-
-        .help-flow span {
-            padding: 4px 10px;
-            background: var(--primary);
-            color: white;
-            border-radius: 6px;
-        }
-
-        .help-flow .arrow {
-            background: none;
-            color: var(--text-sub);
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3層ホイール＋フルスクリーンログ＋設定（正式名称）</title>
+  <style>
+    :root {
+      --stage: 480px;
+      --outerR: 175;
+      /* 操作項目：外半径 */
+      --innerR: 85;
+      /* 操作項目：内半径（描画なし） */
+      --lineOuterR: 210;
+      /* ライン：外半径 */
+      --lineInnerR: 185;
+      /* ライン：内半径 */
+      --color-ring: #0f172a;
+      --bg: #f6f8fb;
+      /* ライン色（IDごと） */
+      --A: #1d4ed8;
+      --B: #059669;
+      --C: #d97706;
+      --D: #7c3aed;
+      --E: #dc2626;
+      --fab-idle: #1976d2;
+      --fab-on: #ff8f00;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    /* モーダル表示中はスクロール禁止 */
+
+    /* Top bar */
+    .topbar {
+      width: min(1000px, 95vw);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border: 1px solid #0f172a;
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    /* Status cards */
+    .status {
+      width: min(1000px, 95vw);
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .card {
+      border: 1px solid #e0e4ea;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+      padding: 8px 10px;
+      min-height: 84px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card.active {
+      outline: 2px solid #409eff;
+    }
+
+    .card h3 {
+      margin: 0 6px 6px 0;
+      font-size: 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .task {
+      font-size: 13px;
+      color: #333;
+    }
+
+    .time {
+      font: 12px/1.6 monospace;
+      color: #666;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #888;
+      margin-left: auto;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #fff;
+    }
+
+    .A {
+      background: var(--A);
+    }
+
+    .B {
+      background: var(--B);
+    }
+
+    .C {
+      background: var(--C);
+    }
+
+    .D {
+      background: var(--D);
+    }
+
+    .E {
+      background: var(--E);
+    }
+
+    /* Wheel (z-index低めに固定) */
+    .wrap {
+      position: relative;
+      width: var(--stage);
+      height: var(--stage);
+      z-index: 10;
+    }
+
+    svg.wheel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 420px;
+      height: 420px;
+    }
+
+    .ringOuter {
+      fill: none;
+      stroke: var(--color-ring);
+      stroke-width: 3;
+    }
+
+    .spoke {
+      stroke: var(--color-ring);
+      stroke-width: 3;
+    }
+
+    .seg {
+      fill: #fff;
+      stroke: none;
+      cursor: pointer;
+      transition: fill .1s ease;
+    }
+
+    .seg:hover {
+      fill: #eef6ff;
+    }
+
+    .segLabel {
+      pointer-events: none;
+      fill: #222;
+      font-size: 12px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .lineRing {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .12s ease;
+    }
+
+    .lineRing.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lineSeg {
+      fill: #fff;
+      stroke: none;
+      cursor: pointer;
+      transition: fill .1s ease;
+    }
+
+    .lineSeg:hover {
+      fill: #f4f4f4;
+    }
+
+    .lineLabel {
+      pointer-events: none;
+      font-size: 11px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-weight: 700;
+    }
+
+    .lineGuide {
+      fill: none;
+      stroke: var(--color-ring);
+      stroke-width: 2;
+      opacity: .5;
+    }
+
+    /* Center button */
+    .fab {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 4px solid var(--A);
+      /* 初期A、JSで更新 */
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .20);
+      background: var(--fab-idle);
+      transition: background .2s ease, border-color .2s ease, transform .15s ease;
+      z-index: 11;
+    }
+
+    .fab.tracking {
+      background: var(--fab-on);
+    }
+
+    .fab:active {
+      transform: translate(-50%, -50%) scale(0.98);
+    }
+
+    /* Sub-menu popup for hierarchical selection */
+    .sub-menu {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+      z-index: 100;
+      min-width: 180px;
+      text-align: center;
+    }
+
+    .sub-menu.hidden {
+      display: none;
+    }
+
+    .sub-menu-title {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .sub-menu-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sub-menu-item {
+      padding: 12px 20px;
+      background: #f3f4f6;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .sub-menu-item:hover {
+      background: #e0e7ff;
+    }
+
+    .sub-menu-item:active {
+      transform: scale(0.98);
+    }
+
+    .sub-menu-cancel {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Snackbar (Undo) — 最前面 */
+    .snackbar {
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .25);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1200;
+    }
+
+    .snackbar.hidden {
+      display: none;
+    }
+
+    .snackbar button {
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    /* Prompt modal (休憩 / 上限時間) */
+    .prompt {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .prompt.open {
+      display: flex;
+    }
+
+    .promptCard {
+      width: min(560px, 90vw);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
+      padding: 14px 16px;
+    }
+
+    .promptBtns {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    /* Settings modal — 前面＆閉じるボタン（×）付き */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modalCard {
+      width: min(920px, 95vw);
+      max-height: 90vh;
+      overflow: auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
+      padding: 14px 16px;
+    }
+
+    .modalHeader {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .modalHeader h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .modalBody {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+      margin-top: 8px;
+    }
+
+    .lineEditor {
+      border: 1px solid #e0e4ea;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .lineEditor h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lineNameInput {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #e0e4ea;
+      border-radius: 8px;
+    }
+
+    .lineEditor textarea {
+      width: 100%;
+      min-height: 64px;
+      font-family: monospace;
+    }
+
+    .modalFooter {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    /* Fullscreen Log modal */
+    .logModal {
+      position: fixed;
+      inset: 0;
+      background: #0b1020d0;
+      display: none;
+      z-index: 1100;
+    }
+
+    .logModal.open {
+      display: block;
+    }
+
+    .logHeader {
+      position: sticky;
+      top: 0;
+      background: #0b1020;
+      color: #fff;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #243049;
+    }
+
+    .logHeader h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .logBody {
+      height: calc(100vh - 52px);
+      overflow: auto;
+      padding: 12px 16px;
+      background: #0b1020;
+    }
+
+    .logRow {
+      color: #dbe7ff;
+      font-size: 13px;
+      display: grid;
+      grid-template-columns: 120px 1fr 1fr;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px dashed #243049;
+    }
+
+    .logRow:last-child {
+      border-bottom: none;
+    }
+
+    .logBadge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #fff;
+    }
+
+    .logClose {
+      margin-left: auto;
+    }
+
+    .searchBox {
+      flex: 1;
+      display: flex;
+    }
+
+    .searchBox input {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #243049;
+      background: #0e1630;
+      color: #dbe7ff;
+    }
+  </style>
 </head>
 
 <body>
-    <header>
-        <h1>⏱️ タイムレコーダー</h1>
-        <div class="header-info">
-            <span>📅 <span class="header-date" id="headerDate">-</span></span>
-            <span id="headerSize">-</span>
-            <button class="header-btn help-btn" id="openHelp" title="ヘルプ">❓</button>
-            <button class="header-btn log-btn" id="openLog" title="ログ">📋</button>
-            <button class="header-btn" id="openSettings" title="設定">⚙️</button>
-        </div>
-    </header>
 
-    <!-- Settings Modal -->
-    <div class="modal-overlay hidden" id="settingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">⚙️ 設定</span>
-                <button class="modal-close" id="closeSettings">✕ 閉じる</button>
-            </div>
-            <div class="setting-row" style="margin-bottom: 12px;">
-                <label>日付<input type="date" id="dateInput"></label>
-                <label>サイズ<select id="sizeSelect">
-                        <option value="2E">2E</option>
-                        <option value="2J">2J</option>
-                        <option value="2L">2L</option>
-                        <option value="2LH">2LH</option>
-                    </select></label>
-            </div>
-            <div class="mode-toggle" style="margin-bottom: 12px;">
-                <button class="mode-btn active" id="simpleModeBtn">📍 シンプル（1工程）</button>
-                <button class="mode-btn" id="multiModeBtn">🏭 マルチレーン</button>
-            </div>
-            <div id="laneCountSetting" class="hidden">
-                <div class="setting-row" style="margin-bottom: 8px;">
-                    <label>工程数<select id="laneCount">
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                        </select></label>
-                </div>
-                <div id="laneSettings"></div>
-            </div>
-        </div>
+  <!-- Top bar -->
+  <div class="topbar">
+    <button id="openLogFullscreen" class="btn">ログ（全画面）</button>
+    <button id="exportCsv" class="btn">CSV</button>
+    <button id="openSettings" class="btn">設定</button>
+  </div>
+
+  <!-- Status cards -->
+  <div id="status" class="status"></div>
+
+  <!-- 3-layer wheel -->
+  <div class="wrap" role="application" aria-label="3層ホイール">
+    <svg id="wheel" class="wheel" viewBox="-210 -210 420 420" aria-hidden="false">
+      <!-- 内周（操作項目）ガイド -->
+      <circle class="ringOuter" cx="0" cy="0" r="175" />
+      <g id="spokes"></g>
+      <g id="segments"></g>
+
+      <!-- 外周（ライン）—右クリックで開閉 -->
+      <g id="lineRing" class="lineRing">
+        <circle class="lineGuide" cx="0" cy="0" r="210" />
+        <circle class="lineGuide" cx="0" cy="0" r="185" />
+        <g id="lineSegments"></g>
+      </g>
+    </svg>
+    <button class="fab" id="fab" aria-label="終了">START</button>
+    <!-- Sub-menu popup for categories with sub-items -->
+    <div id="subMenu" class="sub-menu hidden">
+      <div class="sub-menu-title" id="subMenuTitle">停止</div>
+      <div class="sub-menu-items" id="subMenuItems"></div>
+      <button class="sub-menu-cancel" id="subMenuCancel">キャンセル</button>
     </div>
+  </div>
 
-    <!-- Log Modal -->
-    <div class="modal-overlay hidden" id="logModal">
-        <div class="modal-content wide">
-            <div class="modal-header">
-                <span class="modal-title">📋 イベントログ</span>
-                <button class="modal-close" id="closeLog">✕ 閉じる</button>
-            </div>
-            <div class="log-actions">
-                <button class="btn btn-primary btn-small" id="exportCsv">📥 CSVダウンロード</button>
-                <button class="btn btn-danger btn-small" id="clearLog">🗑️ クリア</button>
-            </div>
-            <div id="logContent"></div>
-        </div>
+  <!-- Snackbar (Undo) -->
+  <div id="snackbar" class="snackbar hidden">
+    <span id="snackText">操作を取り消しますか？</span>
+    <button id="undoBtn">取り消し</button>
+  </div>
+
+  <!-- Prompt modal（休憩候補／上限確認） -->
+  <div id="promptModal" class="prompt" aria-modal="true">
+    <div class="promptCard">
+      <div id="promptText">無操作が続いています。休憩にしますか？</div>
+      <div class="promptBtns">
+        <button id="promptOk" class="btn">OK</button>
+        <button id="promptCancel" class="btn">キャンセル</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Help Modal -->
-    <div class="modal-overlay hidden" id="helpModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">❓ ヘルプ</span>
-                <button class="modal-close" id="closeHelp">✕ 閉じる</button>
-            </div>
-            <div class="help-section">
-                <h3>📌 ワークフロー</h3>
-                <div class="help-flow">
-                    <span>立ち上げ</span><span class="arrow">→</span>
-                    <span>稼働</span><span class="arrow">→</span>
-                    <span>Lot完了</span><span class="arrow">→</span>
-                    <span>Lot切替</span><span class="arrow">→</span>
-                    <span>稼働</span><span class="arrow">→ ...</span>
-                    <span>立ち下げ</span>
-                </div>
-            </div>
-            <div class="help-section">
-                <h3>🔧 ボタンの説明</h3>
-                <ul>
-                    <li><strong>立ち上げ開始/完了</strong>: 設備の立ち上げ時間を記録</li>
-                    <li><strong>稼働開始</strong>: 生産稼働を開始</li>
-                    <li><strong>Lot完了</strong>: 1Lotの生産完了を記録</li>
-                    <li><strong>次Lot稼働開始</strong>: Lot切替後、次の稼働を開始</li>
-                    <li><strong>トラブル/部品交換</strong>: 一時停止を記録（ログに理由が残る）</li>
-                    <li><strong>再稼働</strong>: 一時停止から復帰</li>
-                    <li><strong>立ち下げ開始/完了</strong>: 設備の立ち下げ時間を記録</li>
-                </ul>
-            </div>
-            <div class="help-section">
-                <h3>📋 ログ機能</h3>
-                <ul>
-                    <li>すべてのイベントは自動的に記録されます</li>
-                    <li>ヘッダーの📋ボタンでログを確認できます</li>
-                    <li>CSVダウンロードでExcelで分析可能です</li>
-                    <li>ログはブラウザに保存され、再読み込みしても消えません</li>
-                </ul>
-            </div>
-            <div class="help-section">
-                <h3>🏭 マルチレーンモード</h3>
-                <p>複数の工程を同時並行で記録できます。各工程ごとに異なるサイズを設定可能です。</p>
-            </div>
+  <!-- Settings modal（×／背景クリック／Escで閉じる） -->
+  <div id="settingsModal" class="modal" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <h2>設定（ライン正式名称・操作項目・自動ルール）</h2>
+        <div style="display:flex; gap:8px;">
+          <button id="closeSettings" class="btn">閉じる</button>
+          <button id="closeSettingsX" class="btn" title="閉じる">×</button>
         </div>
+      </div>
+      <div class="modalBody" id="editors"></div>
+      <div class="modalFooter">
+        <!-- 自動ルール -->
+        <div style="margin-right:auto;">
+          <div style="margin-bottom:6px;">
+            <label>休憩の無操作候補（分）：
+              <input id="idleRestMin" type="number" min="1" max="120" style="width:72px;" />
+            </label>
+          </div>
+          <div style="margin-bottom:6px;">
+            <label>最大連続時間の上限（分）：
+              <input id="maxSessionMin" type="number" min="10" max="720" style="width:72px;" />
+            </label>
+            <label style="margin-left:8px;">
+              動作：
+              <select id="maxSessionAction">
+                <option value="stop">自動終了</option>
+                <option value="prompt">確認ダイアログ</option>
+              </select>
+            </label>
+          </div>
+          <div style="margin-bottom:6px;">
+            <label>中央クリック（Idle）の動作：
+              <select id="centerIdleAction">
+                <option value="none">何もしない</option>
+                <option value="resume">直前タスクを再開</option>
+                <option value="openLineRing">ラインリングを開く</option>
+                <option value="startDefault">既定タスクで開始</option>
+              </select>
+            </label>
+            <label style="margin-left:8px;">再開の閾値（分）：
+              <input id="quickResumeMin" type="number" min="1" max="60" style="width:72px;" />
+            </label>
+          </div>
+        </div>
+        <button id="importJson" class="btn">JSONインポート</button>
+        <button id="exportJson" class="btn">JSONエクスポート</button>
+        <button id="resetDefault" class="btn">初期化</button>
+        <button id="saveSettings" class="btn">保存</button>
+      </div>
     </div>
+  </div>
 
-    <main>
-        <section class="card" id="simpleMode">
-            <div class="card-header">🎯 オペレーターモード</div>
-            <div class="stage-indicator">
-                <div class="stage-dot active" id="sDot1"></div>
-                <div class="stage-dot" id="sDot2"></div>
-                <div class="stage-dot" id="sDot3"></div>
-            </div>
-            <div class="stage-label" id="sLabel">ステージ1: 立ち上げ</div>
+  <!-- Fullscreen Log modal -->
+  <div id="logModal" class="logModal" aria-modal="true">
+    <div class="logHeader">
+      <h2>ログ（全画面プレビュー）</h2>
+      <div class="searchBox"><input id="logSearch" type="text" placeholder="検索（タスク名・ライン名・ID）" /></div>
+      <button id="logClose" class="btn logClose">閉じる（Esc）</button>
+    </div>
+    <div id="logBody" class="logBody"></div>
+  </div>
 
-            <!-- States -->
-            <div id="s_idle" class="button-area">
-                <button class="btn btn-primary" onclick="simpleAction('startStartup')">🔧 立ち上げ 開始</button>
-            </div>
-            <div id="s_startup" class="button-area hidden">
-                <div class="timer-display">
-                    <div class="timer-value" id="sTimerStartup">0 分</div>
-                </div>
-                <button class="btn btn-primary" onclick="simpleAction('endStartup')">✓ 立ち上げ 完了</button>
-            </div>
-            <div id="s_ready" class="button-area hidden">
-                <button class="btn btn-success" onclick="simpleAction('startRun')">▶️ 稼働 開始</button>
-                <div style="margin-top: 12px;">
-                    <button class="btn btn-shutdown" onclick="simpleAction('startShutdown')">⏹️ 立ち下げ 開始</button>
-                </div>
-            </div>
-            <div id="s_running" class="button-area hidden">
-                <div class="timer-display">
-                    <div class="timer-value" id="sTimerRun">0 分</div>
-                </div>
-                <button class="btn btn-success" onclick="simpleAction('lotComplete')">✅ Lot完了</button>
-                <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center;">
-                    <button class="btn btn-warning btn-small" onclick="simpleAction('pause', '設備異常')">⚠️ 設備異常</button>
-                    <button class="btn btn-primary btn-small" onclick="simpleAction('pause', '部品交換')">🔧 部品交換</button>
-                </div>
-            </div>
-            <div id="s_lotComplete" class="button-area hidden">
-                <div
-                    style="text-align: center; padding: 20px; background: #f0fdf4; border-radius: 12px; margin-bottom: 16px;">
-                    <div style="font-size: 1.5rem;">✅</div>
-                    <div style="font-size: 1.1rem; font-weight: 600; color: var(--success);">Lot完了</div>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
-                    <button class="btn btn-success" onclick="simpleAction('startLotSwitch')">➡️ 次Lot切替</button>
-                    <button class="btn btn-shutdown" onclick="simpleAction('startShutdown')">⏹️ 立ち下げ 開始</button>
-                </div>
-            </div>
-            <div id="s_lotSwitch" class="button-area hidden">
-                <div class="timer-display">
-                    <div class="timer-value" id="sTimerLotSwitch">0 分</div>
-                </div>
-                <div style="text-align: center; margin-bottom: 12px; color: var(--warning);">Lot切替中</div>
-                <button class="btn btn-success" onclick="simpleAction('startRun')">▶️ 次Lot稼働開始</button>
-                <div style="margin-top: 12px;">
-                    <button class="btn btn-shutdown btn-small" onclick="simpleAction('startShutdown')">⏹️ 立ち下げ
-                        開始</button>
-                </div>
-            </div>
-            <div id="s_paused" class="button-area hidden">
-                <div class="timer-display">
-                    <div class="timer-value" id="sTimerPause">0 分</div>
-                </div>
-                <div id="sPauseLabel" style="text-align: center; margin-bottom: 12px; color: var(--warning);">一時停止中
-                </div>
-                <button class="btn btn-success" onclick="simpleAction('resume')">▶️ 再稼働</button>
-            </div>
-            <div id="s_shutdown" class="button-area hidden">
-                <div class="timer-display">
-                    <div class="timer-value" id="sTimerShutdown">0 分</div>
-                </div>
-                <button class="btn btn-shutdown" onclick="simpleAction('endShutdown')">✓ 立ち下げ 完了</button>
-            </div>
-            <div id="s_complete" class="button-area hidden">
-                <div style="text-align: center; padding: 30px; background: #f0fdf4; border-radius: 12px;">
-                    <div style="font-size: 2rem;">🎉</div>
-                    <div style="font-size: 1.2rem; font-weight: 600; color: var(--success);">おつかれさま</div>
-                    <button class="btn btn-primary" style="margin-top: 16px;" onclick="resetSimpleMode()">🔄
-                        リセット</button>
-                </div>
-            </div>
-        </section>
+  <script>
+    /* ====== Utilities ====== */
+    function getCSS(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+    function fmt(ms) { return new Date(ms).toLocaleString(); }
+    function dur(a, b) { const sec = Math.max(0, Math.round((b - a) / 1000)); if (sec < 60) return `${sec}秒`; const m = Math.floor(sec / 60), s = sec % 60; return s ? `${m}分${s}秒` : `${m}分`; }
+    function elapsedStr(a, b) { const sec = Math.floor((b - a) / 1000), h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; const pad = x => String(x).padStart(2, '0'); return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; }
+    function annularSector(r1, r2, a0, a1) { const large = (a1 - a0) > Math.PI ? 1 : 0; const x0o = r2 * Math.cos(a0), y0o = r2 * Math.sin(a0); const x1o = r2 * Math.cos(a1), y1o = r2 * Math.sin(a1); const x1i = r1 * Math.cos(a1), y1i = r1 * Math.sin(a1); const x0i = r1 * Math.cos(a0), y0i = r1 * Math.sin(a0); return `M ${x0o.toFixed(2)} ${y0o.toFixed(2)} A ${r2} ${r2} 0 ${large} 1 ${x1o.toFixed(2)} ${y1o.toFixed(2)} L ${x1i.toFixed(2)} ${y1i.toFixed(2)} A ${r1} ${r1} 0 ${large} 0 ${x0i.toFixed(2)} ${y0i.toFixed(2)} Z`; }
+    function uuid() { return (crypto?.randomUUID?.() || String(Math.random())).toString(); }
 
-        <!-- Multi-Lane Mode -->
-        <section class="card hidden" id="multiMode">
-            <div class="card-header">🏭 マルチレーン</div>
-            <div id="lanesContainer"></div>
-        </section>
-    </main>
+    /* ====== Constants & State ====== */
+    const LINES = ['A', 'B', 'C', 'D', 'E'];
+    const LINE_COLOR = { A: getCSS('--A'), B: getCSS('--B'), C: getCSS('--C'), D: getCSS('--D'), E: getCSS('--E') };
 
-    <script>
-        // ========== State ==========
-        let mode = 'simple'; // simple or multi
-        let simpleState = {
-            status: 'idle', // idle, startup, ready, running, lotSwitch, paused, shutdown, complete
-            eventStart: null,
-            runStart: null, // Track running start for lot complete
-            pauseType: null
+    /* 設定：正式名称＆カテゴリ＆自動ルール */
+    const defaults = {
+      lines: {
+        A: {
+          name: 'ライン1', categories: [
+            { name: '立ち上げ', sub: [] },
+            { name: '稼働', sub: [] },
+            { name: 'Lot切替', sub: [] },
+            { name: '停止', sub: ['トラブル', '計画停止', '待機'] },
+            { name: '立ち下げ', sub: [] }
+          ]
+        },
+        B: {
+          name: 'ライン2', categories: [
+            { name: '立ち上げ', sub: [] },
+            { name: '稼働', sub: [] },
+            { name: 'Lot切替', sub: [] },
+            { name: '停止', sub: ['トラブル', '計画停止', '待機'] },
+            { name: '立ち下げ', sub: [] }
+          ]
+        },
+        C: {
+          name: 'ライン3', categories: [
+            { name: '立ち上げ', sub: [] },
+            { name: '稼働', sub: [] },
+            { name: 'Lot切替', sub: [] },
+            { name: '停止', sub: ['トラブル', '計画停止', '待機'] },
+            { name: '立ち下げ', sub: [] }
+          ]
+        },
+        D: {
+          name: 'ライン4', categories: [
+            { name: '立ち上げ', sub: [] },
+            { name: '稼働', sub: [] },
+            { name: 'Lot切替', sub: [] },
+            { name: '停止', sub: ['トラブル', '計画停止', '待機'] },
+            { name: '立ち下げ', sub: [] }
+          ]
+        },
+        E: {
+          name: 'ライン5', categories: [
+            { name: '立ち上げ', sub: [] },
+            { name: '稼働', sub: [] },
+            { name: 'Lot切替', sub: [] },
+            { name: '停止', sub: ['トラブル', '計画停止', '待機'] },
+            { name: '立ち下げ', sub: [] }
+          ]
+        },
+      },
+      idleRestMin: 15,          // 無操作休憩候補（分）
+      maxSessionMin: 480,       // 上限時間（分）
+      maxSessionAction: 'stop',  // stop|prompt
+      centerIdleAction: 'resume',// none|resume|openLineRing|startDefault
+      quickResumeMin: 10         // 直前再開の閾値（分）
+    };
+    let config = loadConfig() || structuredClone(defaults);
+
+    let currentLine = 'A';
+    let categories = (config.lines[currentLine] || defaults.lines[currentLine]).categories;
+
+    const outerR = parseFloat(getCSS('--outerR'));
+    const innerR = parseFloat(getCSS('--innerR'));
+    const lineOuterR = parseFloat(getCSS('--lineOuterR'));
+    const lineInnerR = parseFloat(getCSS('--lineInnerR'));
+
+    let undoTimer = null;
+    let lastUndo = null; // {type:'stop'|'autostop', line, log}
+    let lastInteraction = Date.now();  // 無操作検知用
+    let idlePromptShown = false;
+    const maxTimerByLine = { A: null, B: null, C: null, D: null, E: null };
+
+    const statusEl = document.getElementById('status');
+    const wheel = document.getElementById('wheel');
+    const spokesGroup = document.getElementById('spokes');
+    const segGroup = document.getElementById('segments');
+    const lineRing = document.getElementById('lineRing');
+    const lineSegmentsGroup = document.getElementById('lineSegments');
+    const fab = document.getElementById('fab');
+    const snackbar = document.getElementById('snackbar');
+    const snackText = document.getElementById('snackText');
+    const undoBtn = document.getElementById('undoBtn');
+    const promptModal = document.getElementById('promptModal');
+    const promptText = document.getElementById('promptText');
+    const promptOk = document.getElementById('promptOk');
+    const promptCancel = document.getElementById('promptCancel');
+
+    const openLogFullscreenBtn = document.getElementById('openLogFullscreen');
+    const logModal = document.getElementById('logModal');
+    const logBody = document.getElementById('logBody');
+    const logCloseBtn = document.getElementById('logClose');
+    const logSearchInput = document.getElementById('logSearch');
+
+    const exportCsvBtn = document.getElementById('exportCsv');
+    const openSettingsBtn = document.getElementById('openSettings');
+    const settingsModal = document.getElementById('settingsModal');
+    const editorsEl = document.getElementById('editors');
+    const closeSettingsBtn = document.getElementById('closeSettings');
+    const closeSettingsXBtn = document.getElementById('closeSettingsX');
+    const importJsonBtn = document.getElementById('importJson');
+    const exportJsonBtn = document.getElementById('exportJson');
+    const resetDefaultBtn = document.getElementById('resetDefault');
+    const saveSettingsBtn = document.getElementById('saveSettings');
+    const idleRestMinInput = document.getElementById('idleRestMin');
+    const maxSessionMinInput = document.getElementById('maxSessionMin');
+    const maxSessionActionInput = document.getElementById('maxSessionAction');
+    const centerIdleActionInput = document.getElementById('centerIdleAction');
+    const quickResumeMinInput = document.getElementById('quickResumeMin');
+
+    const activeByLine = { A: null, B: null, C: null, D: null, E: null };
+    let lastEndedByLine = { A: null, B: null, C: null, D: null, E: null };
+
+    /* ====== Storage ====== */
+    function getLogs(line) { try { return JSON.parse(localStorage.getItem(`timelogs_${line}`) || '[]'); } catch (e) { return []; } }
+    function saveLogs(line, arr) { localStorage.setItem(`timelogs_${line}`, JSON.stringify(arr)); }
+    function appendLog(line, log) { const arr = getLogs(line); arr.push(log); saveLogs(line, arr); lastEndedByLine[line] = { task: log.task, endedAt: log.endedAt }; }
+    function loadConfig() { try { return JSON.parse(localStorage.getItem('wheel_config') || 'null'); } catch (e) { return null; } }
+    function saveConfig(c) { localStorage.setItem('wheel_config', JSON.stringify(c)); }
+
+    /* ====== Status ====== */
+    function renderStatus() {
+      statusEl.innerHTML = '';
+      LINES.forEach(line => {
+        const conf = config.lines[line] || defaults.lines[line];
+        const name = conf.name || `LINE ${line}`;
+        const card = document.createElement('div');
+        card.className = 'card' + (line === currentLine ? ' active' : '');
+        card.dataset.line = line;
+        const h3 = document.createElement('h3');
+        h3.innerHTML = `<span class="badge ${line}">${line}</span><strong>${name}</strong><span class="hint">${line === currentLine ? '操作対象' : ''}</span>`;
+        const body = document.createElement('div');
+        const a = activeByLine[line];
+        body.innerHTML = `<div class="task">${a ? a.task : 'Idle'}</div>
+                    <div class="time" id="t_${line}">${a ? elapsedStr(a.startedAt, Date.now()) : '-'}</div>`;
+        card.appendChild(h3); card.appendChild(body);
+        card.addEventListener('click', () => setLine(line));
+        statusEl.appendChild(card);
+      });
+    }
+    setInterval(() => {
+      LINES.forEach(line => {
+        const el = document.getElementById(`t_${line}`); if (!el) return;
+        const a = activeByLine[line]; el.textContent = a ? elapsedStr(a.startedAt, Date.now()) : '-';
+      });
+    }, 1000);
+
+    /* ====== Wheel: Inner (tasks) ====== */
+    // Helper to get category name (handles both string and object format)
+    function getCategoryName(cat) {
+      return typeof cat === 'object' ? cat.name : cat;
+    }
+    function getCategorySub(cat) {
+      return typeof cat === 'object' ? (cat.sub || []) : [];
+    }
+
+    // Sub-menu elements
+    const subMenu = document.getElementById('subMenu');
+    const subMenuTitle = document.getElementById('subMenuTitle');
+    const subMenuItems = document.getElementById('subMenuItems');
+    const subMenuCancel = document.getElementById('subMenuCancel');
+
+    function showSubMenu(categoryName, subItems) {
+      subMenuTitle.textContent = categoryName;
+      subMenuItems.innerHTML = '';
+      subItems.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'sub-menu-item';
+        btn.textContent = item;
+        btn.addEventListener('click', () => {
+          hideSubMenu();
+          startTracking(`${categoryName} (${item})`);
+        });
+        subMenuItems.appendChild(btn);
+      });
+      subMenu.classList.remove('hidden');
+    }
+    function hideSubMenu() {
+      subMenu.classList.add('hidden');
+    }
+    subMenuCancel.addEventListener('click', hideSubMenu);
+
+    function handleCategoryClick(cat) {
+      const name = getCategoryName(cat);
+      const subs = getCategorySub(cat);
+      if (subs.length > 0) {
+        showSubMenu(name, subs);
+      } else {
+        startTracking(name);
+      }
+    }
+
+    function drawInnerWheel() {
+      segGroup.innerHTML = ''; spokesGroup.innerHTML = '';
+      const n = categories.length, offset = -Math.PI / 2;
+      for (let i = 0; i < n; i++) {
+        const a = offset + (2 * Math.PI * i) / n;
+        const x1 = innerR * Math.cos(a), y1 = innerR * Math.sin(a);
+        const x2 = outerR * Math.cos(a), y2 = outerR * Math.sin(a);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'spoke');
+        line.setAttribute('x1', x1.toFixed(2)); line.setAttribute('y1', y1.toFixed(2));
+        line.setAttribute('x2', x2.toFixed(2)); line.setAttribute('y2', y2.toFixed(2));
+        spokesGroup.appendChild(line);
+      }
+      for (let i = 0; i < n; i++) {
+        const a0 = offset + (2 * Math.PI * i) / n;
+        const a1 = offset + (2 * Math.PI * (i + 1)) / n;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'seg');
+        path.setAttribute('d', annularSector(innerR, outerR, a0, a1));
+        path.dataset.index = String(i);
+        const cat = categories[i];
+        path.addEventListener('click', () => handleCategoryClick(cat));
+        segGroup.appendChild(path);
+        const rMid = (innerR + outerR) / 2, aMid = (a0 + a1) / 2;
+        const lx = rMid * Math.cos(aMid), ly = rMid * Math.sin(aMid);
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('class', 'segLabel');
+        text.setAttribute('x', lx.toFixed(2)); text.setAttribute('y', ly.toFixed(2));
+        text.textContent = getCategoryName(cat);
+        segGroup.appendChild(text);
+      }
+    }
+
+    /* ====== Wheel: Outer (lines) ====== */
+    function drawLineRing() {
+      lineSegmentsGroup.innerHTML = '';
+      const n = LINES.length, offset = -Math.PI / 2;
+      for (let i = 0; i < n; i++) {
+        const a0 = offset + (2 * Math.PI * i) / n;
+        const a1 = offset + (2 * Math.PI * (i + 1)) / n;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'lineSeg');
+        path.setAttribute('d', annularSector(lineInnerR, lineOuterR, a0, a1));
+        path.dataset.line = LINES[i];
+        path.addEventListener('click', () => { setLine(LINES[i]); toggleLineRing(false); });
+        lineSegmentsGroup.appendChild(path);
+        const rMid = (lineInnerR + lineOuterR) / 2, aMid = (a0 + a1) / 2;
+        const lx = rMid * Math.cos(aMid), ly = rMid * Math.sin(aMid);
+        const lab = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lab.setAttribute('class', 'lineLabel');
+        lab.setAttribute('x', lx.toFixed(2)); lab.setAttribute('y', ly.toFixed(2));
+        lab.setAttribute('fill', LINE_COLOR[LINES[i]]);
+        const name = (config.lines[LINES[i]] || defaults.lines[LINES[i]]).name || LINES[i];
+        lab.textContent = name;
+        lineSegmentsGroup.appendChild(lab);
+      }
+    }
+    function toggleLineRing(on) { lineRing.classList.toggle('open', !!on); }
+
+    /* ====== Line switch ====== */
+    function setLine(line) {
+      if (!LINES.includes(line)) return;
+      currentLine = line;
+      const conf = config.lines[line] || defaults.lines[line];
+      categories = conf.categories;
+      drawInnerWheel();
+      renderStatus();
+      const a = activeByLine[line];
+      fab.textContent = a ? a.task : 'START';
+      fab.classList.toggle('tracking', !!a);
+      fab.style.borderColor = LINE_COLOR[line];
+    }
+
+    /* ====== Tracking & Auto rules ====== */
+    function startTracking(task) {
+      touch();
+      if (!task) return;
+      const active = activeByLine[currentLine];
+      if (active) {
+        const log = { id: uuid(), task: active.task, startedAt: active.startedAt, endedAt: Date.now() };
+        appendLog(currentLine, log);
+        showUndo({ type: 'autostop', line: currentLine, log });
+      }
+      activeByLine[currentLine] = { task, startedAt: Date.now() };
+      fab.classList.add('tracking'); fab.textContent = task;
+      renderStatus();
+      // 上限時間タイマー
+      resetMaxTimer(currentLine);
+      if (config.maxSessionMin && Number(config.maxSessionMin) > 0) {
+        maxTimerByLine[currentLine] = setTimeout(() => {
+          if (config.maxSessionAction === 'stop') {
+            stopTrackingWithReason('上限時間に達したため自動終了しました');
+          } else {
+            showPrompt('計測が上限時間に達しました。終了しますか？', () => stopTrackingWithReason('上限時間で終了'), () => { });
+          }
+        }, Number(config.maxSessionMin) * 60000);
+      }
+    }
+    function stopTracking() {
+      touch();
+      const active = activeByLine[currentLine];
+      if (!active) return;
+      const log = { id: uuid(), task: active.task, startedAt: active.startedAt, endedAt: Date.now() };
+      appendLog(currentLine, log);
+      activeByLine[currentLine] = null;
+      fab.classList.remove('tracking'); fab.textContent = 'START';
+      renderStatus();
+      showUndo({ type: 'stop', line: currentLine, log });
+      resetMaxTimer(currentLine);
+    }
+    function stopTrackingWithReason(msg) {
+      const active = activeByLine[currentLine];
+      if (!active) return;
+      const log = { id: uuid(), task: active.task, startedAt: active.startedAt, endedAt: Date.now(), reason: msg };
+      appendLog(currentLine, log);
+      activeByLine[currentLine] = null;
+      fab.classList.remove('tracking'); fab.textContent = 'START';
+      renderStatus();
+      showUndo({ type: 'stop', line: currentLine, log });
+      resetMaxTimer(currentLine);
+    }
+    function resetMaxTimer(line) { if (maxTimerByLine[line]) { clearTimeout(maxTimerByLine[line]); maxTimerByLine[line] = null; } }
+
+    /* ====== Undo (3s) ====== */
+    function showUndo(info) {
+      lastUndo = info;
+      snackText.textContent = info.type === 'stop' ? '終了を取り消しますか？' : '前タスクの自動終了を取り消しますか？';
+      snackbar.classList.remove('hidden');
+      clearTimeout(undoTimer);
+      undoTimer = setTimeout(() => snackbar.classList.add('hidden'), 3000);
+    }
+    undoBtn.addEventListener('click', () => {
+      if (!lastUndo) return;
+      const { type, line, log } = lastUndo;
+      const arr = getLogs(line);
+      const idx = arr.findIndex(x => x.id === log.id);
+      if (idx >= 0) { arr.splice(idx, 1); saveLogs(line, arr); }
+      // 復帰
+      activeByLine[line] = { task: log.task, startedAt: log.startedAt };
+      if (line === currentLine) { fab.classList.add('tracking'); fab.textContent = log.task; }
+      renderStatus();
+      snackbar.classList.add('hidden'); clearTimeout(undoTimer); lastUndo = null;
+    });
+
+    /* ====== Prompt（休憩候補／上限確認） ====== */
+    function showPrompt(text, onOk, onCancel) {
+      promptText.textContent = text;
+      promptModal.classList.add('open');
+      document.body.classList.add('modal-open');
+      const ok = () => { promptModal.classList.remove('open'); document.body.classList.remove('modal-open'); onOk?.(); idlePromptShown = false; };
+      const cancel = () => { promptModal.classList.remove('open'); document.body.classList.remove('modal-open'); onCancel?.(); idlePromptShown = false; };
+      promptOk.onclick = ok;
+      promptCancel.onclick = cancel;
+    }
+
+    /* ====== 無操作（Idle）検知 → 休憩候補 ====== */
+    function touch() { lastInteraction = Date.now(); }
+    ['click', 'mousemove', 'keydown', 'touchstart', 'touchmove'].forEach(ev => {
+      document.addEventListener(ev, touch, { passive: true });
+    });
+    setInterval(() => {
+      const a = activeByLine[currentLine];
+      if (!a) return; // 計測中のみ対象
+      const idleMs = Date.now() - lastInteraction;
+      const limit = Number(config.idleRestMin || 0) * 60000;
+      if (limit > 0 && idleMs >= limit && !idlePromptShown) {
+        idlePromptShown = true;
+        showPrompt(`無操作が${Math.round(limit / 60000)}分続いています。休憩にしますか？`, () => {
+          // 現在タスクを終了 → 休憩開始
+          const prev = activeByLine[currentLine];
+          if (prev) {
+            const log = { id: uuid(), task: prev.task, startedAt: prev.startedAt, endedAt: Date.now(), reason: '無操作休憩' };
+            appendLog(currentLine, log);
+          }
+          activeByLine[currentLine] = { task: '休憩', startedAt: Date.now() };
+          fab.classList.add('tracking'); fab.textContent = '休憩';
+          renderStatus();
+          resetMaxTimer(currentLine);
+        }, () => { /* キャンセル */ });
+      }
+    }, 30000); // 30秒ごとに確認
+
+    /* ====== Events ====== */
+    document.querySelector('.wrap').addEventListener('contextmenu', (e) => { e.preventDefault(); toggleLineRing(true); });
+    document.addEventListener('click', (e) => {
+      if (lineRing.classList.contains('open')) {
+        const within = lineRing.contains(e.target);
+        const isRightClick = e.button === 2;
+        if (!within && !isRightClick) toggleLineRing(false);
+      }
+    });
+    fab.addEventListener('click', () => {
+      // 計測中は終了
+      if (activeByLine[currentLine]) { stopTracking(); return; }
+      // Idle時：設定どおりの動作
+      const act = String(config.centerIdleAction || 'resume');
+      if (act === 'resume') {
+        const last = lastEndedByLine[currentLine];
+        const limitMs = Number(config.quickResumeMin || 10) * 60000;
+        if (last && (Date.now() - last.endedAt) <= limitMs) { startTracking(last.task); }
+      } else if (act === 'openLineRing') {
+        toggleLineRing(true);
+      } else if (act === 'startDefault') {
+        const def = (config.lines[currentLine] || defaults.lines[currentLine]).categories[0];
+        if (def) startTracking(def);
+      } // none：何もしない
+    });
+    document.addEventListener('keydown', (e) => {
+      const map = {
+        Digit1: 'A', Digit2: 'B', Digit3: 'C', Digit4: 'D', Digit5: 'E',
+        Numpad1: 'A', Numpad2: 'B', Numpad3: 'C', Numpad4: 'D', Numpad5: 'E'
+      };
+      if (map[e.code]) { setLine(map[e.code]); return; }
+      if (e.code === 'Space') { e.preventDefault(); if (activeByLine[currentLine]) stopTracking(); }
+      if (e.code === 'Escape') {
+        toggleLineRing(false);
+        // すべてのモーダルを閉じる
+        closeSettingsModal();
+        closeLog();
+        promptModal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+      }
+    });
+
+    /* ====== Fullscreen Log ====== */
+    openLogFullscreenBtn.addEventListener('click', () => openLog());
+    logCloseBtn.addEventListener('click', () => closeLog());
+    logSearchInput.addEventListener('input', () => renderLogFullscreen(logSearchInput.value.trim()));
+    function openLog() { logModal.classList.add('open'); document.body.classList.add('modal-open'); renderLogFullscreen(''); }
+    function closeLog() { logModal.classList.remove('open'); document.body.classList.remove('modal-open'); }
+    function renderLogFullscreen(q) {
+      let all = [];
+      LINES.forEach(line => {
+        const conf = config.lines[line] || defaults.lines[line];
+        const name = conf.name;
+        all = all.concat(getLogs(line).map(l => ({ ...l, line, lineName: name })));
+      });
+      all.sort((x, y) => (y.endedAt || 0) - (x.endedAt || 0));
+      const kw = (q || '').toLowerCase();
+      const filt = kw ? all.filter(l => (String(l.task).toLowerCase().includes(kw) || String(l.line).toLowerCase().includes(kw) || String(l.lineName).toLowerCase().includes(kw))) : all;
+      logBody.innerHTML = '';
+      filt.slice(0, 1000).forEach(l => {
+        const row = document.createElement('div'); row.className = 'logRow';
+        row.innerHTML = `
+      <div><span class="logBadge ${l.line}" style="background:${LINE_COLOR[l.line]}">${l.line}</span> ${escapeHtml(l.lineName || '')}</div>
+      <div>${escapeHtml(l.task)}</div>
+      <div>${fmt(l.startedAt)} → ${fmt(l.endedAt)}（${dur(l.startedAt, l.endedAt)}）${l.reason ? '｜' + escapeHtml(l.reason) : ''}</div>`;
+        logBody.appendChild(row);
+      });
+    }
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+
+    /* ====== CSV Export（lineName列付き） ====== */
+    exportCsvBtn.addEventListener('click', () => {
+      let all = []; LINES.forEach(line => {
+        const conf = config.lines[line] || defaults.lines[line];
+        const name = conf.name;
+        all = all.concat(getLogs(line).map(l => ({ ...l, line, lineName: name })));
+      });
+      all.sort((a, b) => (a.startedAt || 0) - (b.startedAt || 0));
+      const header = ['lineId', 'lineName', 'task', 'startedAt', 'endedAt', 'startedISO', 'endedISO', 'durationSec', 'reason'];
+      const rows = [header.join(',')];
+      all.forEach(l => {
+        const durSec = Math.max(0, Math.round((l.endedAt - l.startedAt) / 1000));
+        rows.push([
+          l.line, csvEsc(l.lineName || ''), csvEsc(l.task), l.startedAt, l.endedAt,
+          csvEsc(new Date(l.startedAt).toISOString()),
+          csvEsc(new Date(l.endedAt).toISOString()),
+          durSec, csvEsc(l.reason || '')
+        ].join(','));
+      });
+      const csv = rows.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a'); const ts = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      a.href = URL.createObjectURL(blob); a.download = `timelogs_all_${ts}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
+    function csvEsc(s) { const t = String(s ?? ''); return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; }
+
+    /* ====== Settings（正式名称＋操作項目） ====== */
+    openSettingsBtn.addEventListener('click', () => openSettings());
+    closeSettingsBtn.addEventListener('click', () => closeSettingsModal());
+    closeSettingsXBtn.addEventListener('click', () => closeSettingsModal());
+    settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettingsModal(); }); // 背景クリックで閉じる
+
+    resetDefaultBtn.addEventListener('click', () => {
+      config = structuredClone(defaults);
+      saveConfig(config);
+      categories = (config.lines[currentLine] || defaults.lines[currentLine]).categories;
+      drawInnerWheel();
+      openSettings(); // 再描画
+    });
+    exportJsonBtn.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wheel_config.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
+    importJsonBtn.addEventListener('click', () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json';
+      inp.onchange = () => {
+        const file = inp.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const obj = JSON.parse(reader.result);
+            // バリデーション：lines.A..E.name（文字列）、categories（配列）
+            const ok = LINES.every(k => {
+              const ln = obj?.lines?.[k];
+              return ln && typeof ln.name === 'string' && Array.isArray(ln.categories) && ln.categories.length >= 1 && ln.categories.length <= 12;
+            });
+            if (!ok) { alert('不正な設定JSON（lines.A..E の name と categories を確認してください）'); return; }
+            config = {
+              ...defaults,
+              ...obj,
+              idleRestMin: Number(obj.idleRestMin ?? defaults.idleRestMin),
+              maxSessionMin: Number(obj.maxSessionMin ?? defaults.maxSessionMin),
+              maxSessionAction: String(obj.maxSessionAction ?? defaults.maxSessionAction),
+              centerIdleAction: String(obj.centerIdleAction ?? defaults.centerIdleAction),
+              quickResumeMin: Number(obj.quickResumeMin ?? defaults.quickResumeMin)
+            };
+            saveConfig(config);
+            categories = (config.lines[currentLine] || defaults.lines[currentLine]).categories;
+            drawInnerWheel(); openSettings();
+          } catch (e) { alert('JSONの読み込みに失敗'); }
         };
-        let lanes = [];
-        let timers = {};
-        let eventLogs = [];
+        reader.readAsText(file);
+      };
+      inp.click();
+    });
+    saveSettingsBtn.addEventListener('click', () => {
+      const newCfg = structuredClone(config);
+      // 自動ルール
+      newCfg.idleRestMin = Number(idleRestMinInput.value || defaults.idleRestMin);
+      newCfg.maxSessionMin = Number(maxSessionMinInput.value || defaults.maxSessionMin);
+      newCfg.maxSessionAction = String(maxSessionActionInput.value || defaults.maxSessionAction);
+      newCfg.centerIdleAction = String(centerIdleActionInput.value || defaults.centerIdleAction);
+      newCfg.quickResumeMin = Number(quickResumeMinInput.value || defaults.quickResumeMin);
+      // ライン名＆カテゴリ
+      LINES.forEach(line => {
+        const nameInput = document.getElementById(`lineName_${line}`);
+        const ta = document.getElementById(`ta_${line}`);
+        const name = nameInput.value.trim() || `LINE ${line}`;
+        const arr = ta.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+        newCfg.lines[line] = { name, categories: arr };
+      });
+      config = newCfg; saveConfig(config);
+      categories = (config.lines[currentLine] || defaults.lines[currentLine]).categories;
+      drawInnerWheel(); renderStatus();
+      closeSettingsModal();
+    });
 
-        // ========== Constants ==========
-        const STORAGE_KEY = 'timeRecorderV2Logs';
-        const SIZES = ['2E', '2J', '2L', '2LH'];
+    function openSettings() {
+      editorsEl.innerHTML = '';
+      LINES.forEach(line => {
+        const conf = config.lines[line] || defaults.lines[line];
+        const div = document.createElement('div'); div.className = 'lineEditor';
+        const h = document.createElement('h3'); h.innerHTML = `<span class="badge ${line}">${line}</span> 正式名称`;
+        const nameInput = document.createElement('input'); nameInput.id = `lineName_${line}`; nameInput.className = 'lineNameInput'; nameInput.value = conf.name || `LINE ${line}`;
+        const p = document.createElement('p'); p.style.margin = '6px 0'; p.textContent = '操作項目（1行1項目｜推奨：6〜8）';
+        const ta = document.createElement('textarea'); ta.id = `ta_${line}`; ta.value = (conf.categories || []).join('\n');
+        div.appendChild(h); div.appendChild(nameInput); div.appendChild(p); div.appendChild(ta);
+        editorsEl.appendChild(div);
+      });
+      // ルールの現在値
+      idleRestMinInput.value = Number(config.idleRestMin ?? defaults.idleRestMin);
+      maxSessionMinInput.value = Number(config.maxSessionMin ?? defaults.maxSessionMin);
+      maxSessionActionInput.value = String(config.maxSessionAction ?? defaults.maxSessionAction);
+      centerIdleActionInput.value = String(config.centerIdleAction ?? defaults.centerIdleAction);
+      quickResumeMinInput.value = Number(config.quickResumeMin ?? defaults.quickResumeMin);
+      settingsModal.classList.add('open');
+      document.body.classList.add('modal-open');
+    }
+    function closeSettingsModal() {
+      settingsModal.classList.remove('open');
+      document.body.classList.remove('modal-open');
+    }
 
-        // ========== DOM ==========
-        const dateInput = document.getElementById('dateInput');
-        const sizeSelect = document.getElementById('sizeSelect');
-        const settingsModal = document.getElementById('settingsModal');
-        const logModal = document.getElementById('logModal');
-        const helpModal = document.getElementById('helpModal');
-
-        // ========== Init ==========
-        dateInput.value = new Date().toISOString().slice(0, 10);
-        loadLogs();
-        updateHeader();
-
-        // ========== Header Update ==========
-        function updateHeader() {
-            document.getElementById('headerDate').textContent = dateInput.value;
-            document.getElementById('headerSize').textContent = sizeSelect.value;
-        }
-
-        dateInput.addEventListener('change', updateHeader);
-        sizeSelect.addEventListener('change', updateHeader);
-
-        // ========== Modal Controls ==========
-        document.getElementById('openSettings').addEventListener('click', () => {
-            settingsModal.classList.remove('hidden');
-        });
-
-        document.getElementById('closeSettings').addEventListener('click', () => {
-            settingsModal.classList.add('hidden');
-        });
-
-        settingsModal.addEventListener('click', (e) => {
-            if (e.target === settingsModal) {
-                settingsModal.classList.add('hidden');
-            }
-        });
-
-        document.getElementById('openLog').addEventListener('click', () => {
-            renderLogTable();
-            logModal.classList.remove('hidden');
-        });
-
-        document.getElementById('closeLog').addEventListener('click', () => {
-            logModal.classList.add('hidden');
-        });
-
-        logModal.addEventListener('click', (e) => {
-            if (e.target === logModal) {
-                logModal.classList.add('hidden');
-            }
-        });
-
-        document.getElementById('openHelp').addEventListener('click', () => {
-            helpModal.classList.remove('hidden');
-        });
-
-        document.getElementById('closeHelp').addEventListener('click', () => {
-            helpModal.classList.add('hidden');
-        });
-
-        helpModal.addEventListener('click', (e) => {
-            if (e.target === helpModal) {
-                helpModal.classList.add('hidden');
-            }
-        });
-
-        // ========== Helpers ==========
-        function now() { return new Date(); }
-        function formatTime(d) { return d.toTimeString().slice(0, 5); }
-        function minutesBetween(s, e) { return Math.round((e - s) / 60000); }
-        function formatDuration(start, end) {
-            const totalSec = Math.floor((end - start) / 1000);
-            const min = Math.floor(totalSec / 60);
-            const sec = totalSec % 60;
-            return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-        }
-
-        // ========== Log Functions ==========
-        function addLog(eventType, laneName, reason, startTime, endTime) {
-            const log = {
-                date: dateInput.value,
-                size: mode === 'simple' ? sizeSelect.value : (lanes.find(l => l.name === laneName)?.size || sizeSelect.value),
-                laneName: laneName,
-                eventType: eventType,
-                reason: reason || '',
-                startTime: formatTime(startTime),
-                endTime: formatTime(endTime),
-                durationMin: minutesBetween(startTime, endTime)
-            };
-            eventLogs.push(log);
-            saveLogs();
-        }
-
-        function saveLogs() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(eventLogs));
-        }
-
-        function loadLogs() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                eventLogs = JSON.parse(saved);
-            }
-        }
-
-        function renderLogTable() {
-            const container = document.getElementById('logContent');
-            if (eventLogs.length === 0) {
-                container.innerHTML = '<div class="log-empty">ログがありません</div>';
-                return;
-            }
-
-            let html = `<table class="log-table">
-                <thead>
-                    <tr>
-                        <th>日付</th>
-                        <th>サイズ</th>
-                        <th>工程名</th>
-                        <th>イベント</th>
-                        <th>停止理由</th>
-                        <th>開始</th>
-                        <th>終了</th>
-                        <th>時間(分)</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-            eventLogs.forEach(log => {
-                const isTrouble = log.eventType === '一時停止';
-                html += `<tr class="${isTrouble ? 'trouble' : ''}">
-                    <td>${log.date}</td>
-                    <td>${log.size}</td>
-                    <td>${log.laneName}</td>
-                    <td>${log.eventType}</td>
-                    <td>${log.reason}</td>
-                    <td>${log.startTime}</td>
-                    <td>${log.endTime}</td>
-                    <td>${log.durationMin}</td>
-                </tr>`;
-            });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
-        document.getElementById('exportCsv').addEventListener('click', () => {
-            if (eventLogs.length === 0) {
-                alert('ログがありません');
-                return;
-            }
-
-            const headers = ['日付', 'サイズ', '工程名', 'イベント種別', '停止理由', '開始時刻', '終了時刻', '所要時間(分)'];
-            const rows = eventLogs.map(log => [
-                log.date,
-                log.size,
-                log.laneName,
-                log.eventType,
-                log.reason,
-                log.startTime,
-                log.endTime,
-                log.durationMin
-            ]);
-
-            const csvContent = [headers, ...rows]
-                .map(row => row.map(cell => `"${cell}"`).join(','))
-                .join('\n');
-
-            const bom = '\uFEFF';
-            const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `log_${dateInput.value}.csv`;
-            link.click();
-            URL.revokeObjectURL(url);
-        });
-
-        document.getElementById('clearLog').addEventListener('click', () => {
-            if (confirm('すべてのログを削除しますか？')) {
-                eventLogs = [];
-                saveLogs();
-                renderLogTable();
-            }
-        });
-
-        // ========== Mode Toggle ==========
-        document.getElementById('simpleModeBtn').addEventListener('click', () => {
-            mode = 'simple';
-            document.getElementById('simpleModeBtn').classList.add('active');
-            document.getElementById('multiModeBtn').classList.remove('active');
-            document.getElementById('laneCountSetting').classList.add('hidden');
-            document.getElementById('simpleMode').classList.remove('hidden');
-            document.getElementById('multiMode').classList.add('hidden');
-        });
-
-        document.getElementById('multiModeBtn').addEventListener('click', () => {
-            mode = 'multi';
-            document.getElementById('multiModeBtn').classList.add('active');
-            document.getElementById('simpleModeBtn').classList.remove('active');
-            document.getElementById('laneCountSetting').classList.remove('hidden');
-            document.getElementById('simpleMode').classList.add('hidden');
-            document.getElementById('multiMode').classList.remove('hidden');
-            initLanes();
-        });
-
-        // ========== Lane Management ==========
-        document.getElementById('laneCount').addEventListener('change', initLanes);
-
-        function initLanes() {
-            const count = parseInt(document.getElementById('laneCount').value);
-            lanes = [];
-            let namesHtml = '';
-            for (let i = 1; i <= count; i++) {
-                lanes.push({
-                    id: i,
-                    name: `工程${i}`,
-                    size: sizeSelect.value,
-                    status: 'idle',
-                    eventStart: null,
-                    runStart: null,
-                    pauseType: null
-                });
-                namesHtml += `<div class="setting-row" style="margin-top: 8px;">
-                    <label>工程${i}名<input type="text" id="laneName${i}" value="工程${i}" style="width: 100px;" onchange="updateLaneName(${i})"></label>
-                    <label>サイズ<select id="laneSize${i}" onchange="updateLaneSize(${i})">
-                        ${SIZES.map(s => `<option value="${s}" ${s === sizeSelect.value ? 'selected' : ''}>${s}</option>`).join('')}
-                    </select></label>
-                </div>`;
-            }
-            document.getElementById('laneSettings').innerHTML = namesHtml;
-            renderLanes();
-        }
-
-        function updateLaneName(id) {
-            const input = document.getElementById(`laneName${id}`);
-            const lane = lanes.find(l => l.id === id);
-            if (lane && input) {
-                lane.name = input.value;
-                renderLanes();
-            }
-        }
-
-        function renderLanes() {
-            const container = document.getElementById('lanesContainer');
-            container.innerHTML = lanes.map(lane => `
-                <div class="lane" id="lane${lane.id}">
-                    <div class="lane-header">
-                        <div style="display: flex; flex-direction: column;">
-                            <span class="lane-title">${lane.name}</span>
-                            <span style="font-size: 0.9rem; color: var(--primary);">${lane.size}</span>
-                        </div>
-                        <span class="lane-status ${lane.status}">${getStatusLabel(lane.status)}</span>
-                    </div>
-                    <div class="lane-timer" id="laneTimer${lane.id}" style="${lane.status === 'idle' || lane.status === 'complete' ? 'display: none;' : ''}">0 分</div>
-                    <div class="lane-buttons">
-                        ${getLaneButtons(lane)}
-                    </div>
-                </div>
-            `).join('');
-            startLaneTimers();
-        }
-
-        function updateLaneSize(id) {
-            const select = document.getElementById(`laneSize${id}`);
-            const lane = lanes.find(l => l.id === id);
-            if (lane && select) {
-                lane.size = select.value;
-                renderLanes();
-            }
-        }
-
-        function resetLane(id) {
-            const lane = lanes.find(l => l.id === id);
-            if (lane) {
-                lane.status = 'idle';
-                lane.eventStart = null;
-                lane.runStart = null;
-                lane.pauseType = null;
-                renderLanes();
-            }
-        }
-
-        function resetSimpleMode() {
-            clearInterval(simpleTimer);
-            simpleState = {
-                status: 'idle',
-                eventStart: null,
-                runStart: null,
-                pauseType: null
-            };
-            showSimpleState('s_idle');
-            updateSimpleStage(1);
-        }
-
-        function getStatusLabel(status) {
-            const labels = {
-                idle: '待機中',
-                startup: '立ち上げ中',
-                running: '稼働中',
-                lotComplete: 'Lot完了',
-                lotSwitch: '次Lot切替中',
-                paused: '一時停止',
-                shutdown: '立ち下げ中',
-                complete: '完了'
-            };
-            return labels[status] || status;
-        }
-
-        function getLaneButtons(lane) {
-            switch (lane.status) {
-                case 'idle':
-                    return `<button class="btn btn-primary" onclick="laneAction(${lane.id}, 'startStartup')">🔧 立ち上げ</button>`;
-                case 'startup':
-                    return `<button class="btn btn-primary" onclick="laneAction(${lane.id}, 'endStartup')">✓ 立ち上げ完了</button>`;
-                case 'running':
-                    return `
-                        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                            <button class="btn btn-success" onclick="laneAction(${lane.id}, 'lotComplete')" style="font-size: 1.1rem; padding: 14px 28px;">✅ Lot完了</button>
-                            <div style="display: flex; gap: 8px; justify-content: center;">
-                                <button class="btn btn-danger btn-small" onclick="laneAction(${lane.id}, 'pause', 'トラブル')">⚠️ トラブル</button>
-                                <button class="btn btn-primary btn-small" onclick="laneAction(${lane.id}, 'pause', '部品交換')">🔧 部品交換</button>
-                            </div>
-                        </div>
-                    `;
-                case 'lotComplete':
-                    return `
-                        <div style="text-align: center; padding: 12px; background: #f0fdf4; border-radius: 12px; margin-bottom: 10px;">
-                            <div style="font-size: 1.2rem;">✅ Lot完了</div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                            <button class="btn btn-success" onclick="laneAction(${lane.id}, 'startLotSwitch')">➡️ 次Lot切替</button>
-                            <button class="btn btn-shutdown" onclick="laneAction(${lane.id}, 'startShutdown')">⏹️ 立ち下げ開始</button>
-                        </div>
-                    `;
-                case 'lotSwitch':
-                    return `
-                        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                            <button class="btn btn-success" onclick="laneAction(${lane.id}, 'startRun')" style="font-size: 1.1rem; padding: 14px 28px;">▶️ 次Lot稼働開始</button>
-                            <button class="btn btn-shutdown btn-small" onclick="laneAction(${lane.id}, 'startShutdown')">⏹️ 立ち下げ開始</button>
-                        </div>
-                    `;
-                case 'paused':
-                    return `<button class="btn btn-success" onclick="laneAction(${lane.id}, 'resume')">▶️ 再稼働</button>`;
-                case 'shutdown':
-                    return `<button class="btn btn-shutdown" onclick="laneAction(${lane.id}, 'endShutdown')">✓ 立ち下げ完了</button>`;
-                case 'complete':
-                    return `<div style="text-align: center;"><div style="color: var(--success); font-weight: 600;">🎉 おつかれさま</div><button class="btn btn-primary btn-small" style="margin-top: 10px;" onclick="resetLane(${lane.id})">🔄 リセット</button></div>`;
-                default:
-                    return `<button class="btn btn-success" onclick="laneAction(${lane.id}, 'startRun')">▶️ 稼働開始</button>`;
-            }
-        }
-
-        function laneAction(id, action, pauseType = null) {
-            const lane = lanes.find(l => l.id === id);
-            if (!lane) return;
-
-            const currentTime = now();
-
-            switch (action) {
-                case 'startStartup':
-                    lane.status = 'startup';
-                    lane.eventStart = currentTime;
-                    break;
-                case 'endStartup':
-                    addLog('立ち上げ', lane.name, '', lane.eventStart, currentTime);
-                    lane.status = 'running';
-                    lane.eventStart = currentTime;
-                    lane.runStart = currentTime;
-                    break;
-                case 'startRun':
-                    if (lane.status === 'lotSwitch') {
-                        addLog('Lot切替', lane.name, '', lane.eventStart, currentTime);
-                    }
-                    lane.status = 'running';
-                    lane.eventStart = currentTime;
-                    lane.runStart = currentTime;
-                    break;
-                case 'lotComplete':
-                    addLog('稼働', lane.name, '', lane.runStart, currentTime);
-                    addLog('Lot完了', lane.name, '', currentTime, currentTime);
-                    lane.status = 'lotComplete';
-                    lane.eventStart = null;
-                    break;
-                case 'startLotSwitch':
-                    lane.status = 'lotSwitch';
-                    lane.eventStart = currentTime;
-                    break;
-                case 'pause':
-                    addLog('稼働', lane.name, '', lane.runStart, currentTime);
-                    lane.pauseType = pauseType;
-                    lane.status = 'paused';
-                    lane.eventStart = currentTime;
-                    break;
-                case 'resume':
-                    addLog('一時停止', lane.name, lane.pauseType, lane.eventStart, currentTime);
-                    lane.status = 'running';
-                    lane.eventStart = currentTime;
-                    lane.runStart = currentTime;
-                    break;
-                case 'startShutdown':
-                    if (lane.status === 'running') {
-                        addLog('稼働', lane.name, '', lane.runStart, currentTime);
-                    } else if (lane.status === 'lotSwitch') {
-                        addLog('Lot切替', lane.name, '', lane.eventStart, currentTime);
-                    }
-                    lane.status = 'shutdown';
-                    lane.eventStart = currentTime;
-                    break;
-                case 'endShutdown':
-                    addLog('立ち下げ', lane.name, '', lane.eventStart, currentTime);
-                    lane.status = 'complete';
-                    lane.eventStart = null;
-                    break;
-            }
-            renderLanes();
-        }
-
-        function startLaneTimers() {
-            // Clear old timers
-            Object.values(timers).forEach(t => clearInterval(t));
-            timers = {};
-
-            lanes.forEach(lane => {
-                if (lane.eventStart && lane.status !== 'idle' && lane.status !== 'complete') {
-                    timers[`lane${lane.id}`] = setInterval(() => {
-                        const el = document.getElementById(`laneTimer${lane.id}`);
-                        if (el) {
-                            el.textContent = formatDuration(lane.eventStart, now());
-                        }
-                    }, 1000);
-                }
-            });
-        }
-
-        // ========== Simple Mode Actions ==========
-        let simpleTimer = null;
-
-        function simpleAction(action, pauseType = null) {
-            clearInterval(simpleTimer);
-            const currentTime = now();
-            const laneName = '-';
-
-            switch (action) {
-                case 'startStartup':
-                    simpleState.status = 'startup';
-                    simpleState.eventStart = currentTime;
-                    showSimpleState('s_startup');
-                    startSimpleTimer('sTimerStartup');
-                    updateSimpleStage(1);
-                    break;
-                case 'endStartup':
-                    addLog('立ち上げ', laneName, '', simpleState.eventStart, currentTime);
-                    simpleState.status = 'ready';
-                    showSimpleState('s_ready');
-                    updateSimpleStage(2);
-                    break;
-                case 'startRun':
-                    if (simpleState.status === 'lotSwitch') {
-                        addLog('Lot切替', laneName, '', simpleState.eventStart, currentTime);
-                    }
-                    simpleState.status = 'running';
-                    simpleState.eventStart = currentTime;
-                    simpleState.runStart = currentTime;
-                    showSimpleState('s_running');
-                    startSimpleTimer('sTimerRun');
-                    break;
-                case 'lotComplete':
-                    addLog('稼働', laneName, '', simpleState.runStart, currentTime);
-                    addLog('Lot完了', laneName, '', currentTime, currentTime);
-                    simpleState.status = 'lotComplete';
-                    simpleState.eventStart = null;
-                    showSimpleState('s_lotComplete');
-                    break;
-                case 'startLotSwitch':
-                    simpleState.status = 'lotSwitch';
-                    simpleState.eventStart = currentTime;
-                    showSimpleState('s_lotSwitch');
-                    startSimpleTimer('sTimerLotSwitch');
-                    break;
-                case 'pause':
-                    addLog('稼働', laneName, '', simpleState.runStart, currentTime);
-                    simpleState.pauseType = pauseType;
-                    simpleState.status = 'paused';
-                    simpleState.eventStart = currentTime;
-                    document.getElementById('sPauseLabel').textContent = `${pauseType} 中`;
-                    showSimpleState('s_paused');
-                    startSimpleTimer('sTimerPause');
-                    break;
-                case 'resume':
-                    addLog('一時停止', laneName, simpleState.pauseType, simpleState.eventStart, currentTime);
-                    simpleState.status = 'running';
-                    simpleState.eventStart = currentTime;
-                    simpleState.runStart = currentTime;
-                    showSimpleState('s_running');
-                    startSimpleTimer('sTimerRun');
-                    break;
-                case 'startShutdown':
-                    if (simpleState.status === 'running') {
-                        addLog('稼働', laneName, '', simpleState.runStart, currentTime);
-                    } else if (simpleState.status === 'lotSwitch') {
-                        addLog('Lot切替', laneName, '', simpleState.eventStart, currentTime);
-                    }
-                    simpleState.status = 'shutdown';
-                    simpleState.eventStart = currentTime;
-                    showSimpleState('s_shutdown');
-                    startSimpleTimer('sTimerShutdown');
-                    updateSimpleStage(3);
-                    break;
-                case 'endShutdown':
-                    addLog('立ち下げ', laneName, '', simpleState.eventStart, currentTime);
-                    simpleState.status = 'complete';
-                    showSimpleState('s_complete');
-                    updateSimpleStage(4);
-                    break;
-            }
-        }
-
-        function showSimpleState(stateId) {
-            ['s_idle', 's_startup', 's_ready', 's_running', 's_lotComplete', 's_lotSwitch', 's_paused', 's_shutdown', 's_complete'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(stateId).classList.remove('hidden');
-        }
-
-        function startSimpleTimer(displayId) {
-            const update = () => {
-                if (simpleState.eventStart) {
-                    document.getElementById(displayId).textContent = formatDuration(simpleState.eventStart, now());
-                }
-            };
-            update();
-            simpleTimer = setInterval(update, 1000);
-        }
-
-        function updateSimpleStage(stage) {
-            const dots = ['sDot1', 'sDot2', 'sDot3'];
-            const labels = ['ステージ1: 立ち上げ', 'ステージ2: 通常作業', 'ステージ3: 立ち下げ', '完了'];
-
-            dots.forEach((id, i) => {
-                const dot = document.getElementById(id);
-                dot.classList.remove('active', 'done');
-                if (i + 1 < stage) dot.classList.add('done');
-                else if (i + 1 === stage) dot.classList.add('active');
-            });
-
-            document.getElementById('sLabel').textContent = labels[stage - 1] || 'おつかれさま';
-        }
-    </script>
+    /* ====== Init ====== */
+    function init() {
+      renderStatus();
+      drawInnerWheel();
+      drawLineRing();
+      setLine('A');
+    }
+    init();
+  </script>
 </body>
 
 </html>
