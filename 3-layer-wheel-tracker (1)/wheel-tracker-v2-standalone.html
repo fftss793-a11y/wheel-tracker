@@ -420,33 +420,65 @@
             if (!isOpen) return null;
 
             return (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1300] backdrop-blur-sm" onClick={onClose}>
-                    <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-[95vw] max-w-[600px] max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950">
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2"><Settings2 className="w-5 h-5 text-slate-400" />システム設定</h2>
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1300] backdrop-blur-sm" onClick={onClose}>
+                    <div className="bg-slate-950 border border-slate-700 rounded-xl shadow-2xl w-[95vw] max-w-[600px] max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2"><Settings2 className="w-5 h-5 text-blue-400" />システム設定</h2>
                             <button onClick={onClose}><X className="text-slate-500 hover:text-white" /></button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar flex flex-col gap-6">
+                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar flex flex-col gap-8">
+
                             <section>
-                                <h3 className="text-xs font-bold text-blue-400 uppercase mb-4 border-b border-slate-800 pb-2">休憩時間案内</h3>
-                                <div className="flex gap-2">
-                                    {(localConfig.breakAlerts || ['10:00', '11:45', '15:00']).map((val, i) => (
-                                        <input key={i} type="time" value={val} onChange={e => {
-                                            const newAlerts = [...(localConfig.breakAlerts || ['10:00', '11:45', '15:00'])];
-                                            newAlerts[i] = e.target.value;
-                                            setLocalConfig({ ...localConfig, breakAlerts: newAlerts });
-                                        }} className="bg-slate-800 border border-slate-700 rounded p-2 text-white" />
-                                    ))}
+                                <h3 className="text-xs font-bold text-blue-400 uppercase mb-4 border-b border-slate-800 pb-2">⏰ タイマー＆アラート</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-sm font-bold text-slate-300 block mb-2">最大連続計測時間 (分)</label>
+                                        <div className="flex gap-4 items-center">
+                                            <input type="number" value={localConfig.maxSessionMin || 540} onChange={e => setLocalConfig({ ...localConfig, maxSessionMin: parseInt(e.target.value) })} className="bg-slate-900 border border-slate-700 rounded p-2 text-white w-24" />
+                                            <span className="text-slate-500 text-xs">※デフォルト540分 (9時間)</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-bold text-slate-300 block mb-2">上限到達時のアクション</label>
+                                        <select value={localConfig.maxSessionAction || 'stop'} onChange={e => setLocalConfig({ ...localConfig, maxSessionAction: e.target.value })} className="bg-slate-900 border border-slate-700 rounded p-2 text-white w-full">
+                                            <option value="stop">自動終了 (Auto Stop)</option>
+                                            <option value="confirm">確認メッセージを表示</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-bold text-slate-300 block mb-2">休憩時間案内 (時刻)</label>
+                                        <div className="flex gap-2 flex-wrap">
+                                            {(localConfig.breakAlerts || ['10:00', '11:45', '15:00']).map((val, i) => (
+                                                <input key={i} type="time" value={val} onChange={e => {
+                                                    const newAlerts = [...(localConfig.breakAlerts || ['10:00', '11:45', '15:00'])];
+                                                    newAlerts[i] = e.target.value;
+                                                    setLocalConfig({ ...localConfig, breakAlerts: newAlerts });
+                                                }} className="bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
+
                             <section>
-                                <h3 className="text-xs font-bold text-blue-400 uppercase mb-4 border-b border-slate-800 pb-2">データ管理</h3>
+                                <h3 className="text-xs font-bold text-blue-400 uppercase mb-4 border-b border-slate-800 pb-2">🎮 操作設定</h3>
+                                <div>
+                                    <label className="text-sm font-bold text-slate-300 block mb-2">中央ボタン(アイドル時)の動作</label>
+                                    <select value={localConfig.centerIdleAction || 'resume'} onChange={e => setLocalConfig({ ...localConfig, centerIdleAction: e.target.value })} className="bg-slate-900 border border-slate-700 rounded p-2 text-white w-full">
+                                        <option value="none">何もしない</option>
+                                        <option value="resume">直前のタスクを再開</option>
+                                    </select>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h3 className="text-xs font-bold text-blue-400 uppercase mb-4 border-b border-slate-800 pb-2">💾 データ管理</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button onClick={() => { if (confirm('設定を初期化しますか？')) onReset(); }} className="flex flex-col items-center gap-2 p-3 bg-slate-800 rounded-lg border border-slate-700"><RotateCcw size={20} className="text-red-500" /><span className="text-xs font-bold text-red-400">初期化</span></button>
+                                    <button onClick={() => { if (confirm('すべての設定とデータを初期化しますか？この操作は取り消せません。')) onReset(); }} className="flex flex-col items-center gap-2 p-3 bg-red-900/10 hover:bg-red-900/30 rounded-lg border border-red-900/30 hover:border-red-500/50 transition-all"><RotateCcw size={20} className="text-red-500" /><span className="text-xs font-bold text-red-400">システム初期化</span></button>
                                 </div>
                             </section>
                         </div>
-                        <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end gap-3">
+                        <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
                             <button onClick={onClose} className="px-4 py-2 text-slate-400 hover:text-white font-bold text-sm">キャンセル</button>
                             <button onClick={() => onSave(localConfig)} className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold"><Save size={16} /> 保存</button>
                         </div>
@@ -459,40 +491,61 @@
         const HelpModal = ({ isOpen, onClose }) => {
             if (!isOpen) return null;
             return (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1300] backdrop-blur-sm" onClick={onClose}>
-                    <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-[95vw] max-w-[600px] max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950">
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2"><HelpCircle className="w-5 h-5 text-blue-400" />使い方ガイド</h2>
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1300] backdrop-blur-md" onClick={onClose}>
+                    <div className="bg-slate-950 border border-slate-700 rounded-xl shadow-2xl w-[95vw] max-w-[700px] max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-3"><HelpCircle className="w-6 h-6 text-blue-400" />使い方ガイド</h2>
                             <button onClick={onClose}><X className="text-slate-500 hover:text-white" /></button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar text-slate-300 text-sm space-y-6">
-                            <section>
-                                <h3 className="text-blue-400 font-bold uppercase tracking-wider mb-3">🎯 基本操作</h3>
-                                <ul className="space-y-2 ml-4">
-                                    <li><span className="text-white font-bold">タスク開始</span>: 内側のホイールでタスクをクリック</li>
-                                    <li><span className="text-white font-bold">タスク停止</span>: 中央ボタンをクリック</li>
-                                    <li><span className="text-white font-bold">ライン変更</span>: 外側リング(A〜E)をクリック</li>
-                                </ul>
-                            </section>
-                            <section>
-                                <h3 className="text-blue-400 font-bold uppercase tracking-wider mb-3">⚙️ 設定モード</h3>
-                                <ul className="space-y-2 ml-4">
-                                    <li><span className="text-white font-bold">設定ONにする</span>: ⚙️ボタンをクリック</li>
-                                    <li><span className="text-white font-bold">ライン設定</span>: 外側リング(A〜E)をクリック</li>
-                                    <li><span className="text-white font-bold">システム設定</span>: 下のダッシュボードをクリック</li>
-                                </ul>
-                            </section>
-                            <section>
-                                <h3 className="text-blue-400 font-bold uppercase tracking-wider mb-3">⌨️ キーボード</h3>
-                                <ul className="space-y-2 ml-4">
-                                    <li><span className="text-white font-bold">1〜5</span>: ラインA〜Eに切り替え</li>
-                                    <li><span className="text-white font-bold">Space</span>: 計測停止</li>
-                                    <li><span className="text-white font-bold">Esc</span>: モーダルを閉じる</li>
-                                </ul>
+                        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar text-slate-300">
+                            <div className="grid md:grid-cols-2 gap-8 mb-8">
+                                <section>
+                                    <h3 className="flex items-center gap-2 text-white font-bold text-lg mb-4 border-b border-slate-800 pb-2"><Activity className="text-emerald-400 w-5 h-5" /> 基本的な使い方</h3>
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                                            <div className="font-bold text-white mb-1">1. タスクを開始する</div>
+                                            <p className="text-xs">中央のホイールにある作業名をクリックすると計測が始まります。「トラブル」などの一部項目は、さらに詳細な理由を選択できます。</p>
+                                        </div>
+                                        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                                            <div className="font-bold text-white mb-1">2. 計測を止める</div>
+                                            <p className="text-xs">中央の大きな円をクリックするか、スペースキーを押すと計測が停止（IDLE状態）します。</p>
+                                        </div>
+                                        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                                            <div className="font-bold text-white mb-1">3. ラインを切り替える</div>
+                                            <p className="text-xs">一番外側のリング(A, B, C...)をクリックするか、キーボードの数字キー(1〜5)でラインを即座に切り替えられます。</p>
+                                        </div>
+                                    </div>
+                                </section>
+                                <section>
+                                    <h3 className="flex items-center gap-2 text-white font-bold text-lg mb-4 border-b border-slate-800 pb-2"><Settings className="text-blue-400 w-5 h-5" /> 設定と履歴</h3>
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                                            <div className="font-bold text-white mb-1">⚙️ 設定変更</div>
+                                            <p className="text-xs">右上の歯車アイコンで「編集モード」になります。モード中に各エリアをクリックすると設定が開きます。</p>
+                                            <ul className="list-disc list-inside text-[10px] mt-1 text-slate-400">
+                                                <li>外側リング → 各ラインの名称・タスク編集</li>
+                                                <li>下のパネル → 全体設定（時間設定など）</li>
+                                            </ul>
+                                        </div>
+                                        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                                            <div className="font-bold text-white mb-1">📄 履歴と出力</div>
+                                            <p className="text-xs">右上の書類アイコンで履歴を表示、ダウンロードアイコンでCSVファイルとして保存できます。</p>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <section className="bg-blue-900/20 p-4 rounded-xl border border-blue-500/20">
+                                <h3 className="text-blue-300 font-bold mb-2 flex items-center gap-2"><Keyboard className="w-4 h-4" /> ショートカットキー</h3>
+                                <div className="grid grid-cols-3 gap-2 text-xs font-mono text-slate-300">
+                                    <div className="bg-slate-900 p-2 rounded text-center border border-slate-700"><span className="text-white font-bold">1-5</span> ライン切替</div>
+                                    <div className="bg-slate-900 p-2 rounded text-center border border-slate-700"><span className="text-white font-bold">Space</span> 停止/再開</div>
+                                    <div className="bg-slate-900 p-2 rounded text-center border border-slate-700"><span className="text-white font-bold">Esc</span> 閉じる</div>
+                                </div>
                             </section>
                         </div>
-                        <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end">
-                            <button onClick={onClose} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold">OK</button>
+                        <div className="p-5 bg-slate-900 border-t border-slate-800 flex justify-center">
+                            <button onClick={onClose} className="px-10 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold shadow-lg shadow-blue-900/20 text-lg transition-all hover:scale-105">理解しました</button>
                         </div>
                     </div>
                 </div>
@@ -521,7 +574,31 @@
                     if (saved) setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
                 } catch (e) { }
             }, []);
-            useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    const currentNow = Date.now();
+                    setNow(currentNow);
+
+                    // Max Session Logic
+                    const maxMin = config.maxSessionMin || 540;
+                    const action = config.maxSessionAction || 'stop';
+
+                    Object.entries(activeSessions).forEach(([line, session]) => {
+                        if (session) {
+                            const elapsedMin = (currentNow - session.startedAt) / 60000;
+                            if (elapsedMin >= maxMin) {
+                                if (action === 'stop') {
+                                    // Check if we haven't already just stopped it (to prevent loops if state updates lag slightly, though activeSessions check handles it)
+                                    stopTracking(line, '最大時間経過による自動終了');
+                                }
+                                // If action is 'confirm', we relies on the UI to show alert (red blinking timer) rather than a blocking modal loop
+                            }
+                        }
+                    });
+
+                }, 1000);
+                return () => clearInterval(timer);
+            }, [activeSessions, config]);
             useEffect(() => { localStorage.setItem('wheel_config_v2', JSON.stringify(config)); }, [config]);
 
             const getLogs = (line) => { try { return JSON.parse(localStorage.getItem(`timelogs_v2_${line}`) || '[]'); } catch { return []; } };
@@ -582,6 +659,11 @@
             const handleCenterClick = () => {
                 if (isEditMode) { setIsEditMode(false); return; }
                 if (activeSessions[currentLine]) { stopTracking(currentLine); return; }
+
+                // Idle Action Logic
+                const idleAction = config.centerIdleAction || 'resume';
+                if (idleAction === 'none') return;
+
                 const last = lastEnded[currentLine];
                 if (last && (Date.now() - last.endedAt) <= (config.quickResumeMin || 10) * 60000) startTracking(currentLine, last.task);
             };
