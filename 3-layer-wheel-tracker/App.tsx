@@ -331,147 +331,68 @@ function App() {
           The wheel is z-20. Let's put this at z-20 as well or z-10?
           If z-20, we need to make sure the container is pointer-events-none.
       */}
-      <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-        <svg viewBox="0 0 1000 1000" className="w-full h-full max-w-[1000px] max-h-[1000px] animate-in fade-in duration-1000">
-          <defs>
-            {/* Define paths for text. 
-                     Wheel is roughly 600-700px in this huge viewport?
-                     Let's estimate radii based on Wheel.tsx constants scaled up.
-                     Outer Radius of Wheel is 320. Let's put text at R=360.
-                     Center (500, 500).
-                 */}
-            {/* Top Arc for Line Name (Clockwise? No, readable usually means left-to-right on top) */}
-            <path id="topCurve" d="M 300,500 A 200,200 0 0,1 700,500" fill="none" /> {/* Simple arc for inspection */}
-            {/* Better Top Curve: From 10 o'clock to 2 o'clock */}
-            <path id="hudTopPath" d="M 340,400 A 220,220 0 0,1 660,400" fill="none" /> {/* Approx */}
+      {/* --- HUD: MODERN CLEAN (Four Corners) --- */}
 
-            {/* Actually let's use exact math relative to 500,500 */}
-            {/* R = 370 (Just outside the expanded wheel R=320 + gap) */}
-            {/* Top: -45 deg to +45 deg (Up is -90). So -135 to -45?
-                     Let's use standard angles.
-                     Top centered at -90deg.
-                     We want text from approx -130deg to -50deg.
-                 */}
-            <path id="textPathTop" d="M 300,500 A 200,200 0 0,1 700,500" transform="translate(0, -20)" /> {/* Placeholder, will refine below */}
-          </defs>
+      {/* TL: Clock & Date */}
+      <div className="absolute top-6 left-8 z-30 pointer-events-none select-none">
+        <div className="text-5xl font-bold tracking-tighter text-white drop-shadow-lg font-mono">
+          {new Date(now).toLocaleTimeString('en-US', { hour12: false })}
+          <span className="text-xl text-slate-500 ml-2 align-baseline font-sans tracking-normal">{new Date(now).getMilliseconds().toString().padStart(3, '0').slice(0, 2)}</span>
+        </div>
+        <div className="text-sm text-slate-500 font-bold tracking-[0.2em] uppercase mt-1">
+          {new Date(now).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+        </div>
+      </div>
 
-          {/* 
-                 Radius Calibration:
-                 Wheel Inner: 80
-                 Wheel Outer: 240
-                 Line Outer: 300
-                 Expanded Line Outer: 320
-                 Border Padding: 5-10
-                 
-                 So HUD should be at R=360+.
-                 
-                 Center: 500, 500.
-             */}
+      {/* TR: System Controls */}
+      <div className="absolute top-6 right-8 z-40 flex flex-col gap-3 items-end">
+        <div className="flex gap-2">
+          <button onClick={() => setIsLogOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ログ"><FileText size={20} /></button>
+          <button onClick={() => setIsEditMode(!isEditMode)} className={`p-3 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={20} /></button>
+        </div>
+        {isEditMode && (
+          <div className="flex gap-2 animate-in fade-in slide-in-from-top-2">
+            <button onClick={handleCsvExport} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="CSV出力"><Download size={20} /></button>
+            <button onClick={() => setIsGlobalSettingsOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="全体設定"><LayoutDashboard size={20} /></button>
+            <button onClick={() => setIsHelpOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ヘルプ"><HelpCircle size={20} /></button>
+          </div>
+        )}
+      </div>
 
-          {/* TOP: LINE NAME */}
-          {/* Path from Left-Top to Right-Top.
-                 Start Angle: -140 degrees. End Angle: -40 degrees.
-                 x = 500 + r * cos(theta)
-                 y = 500 + r * sin(theta)
-             */}
-          <path id="pathLineName" d="M 217,217 A 400,400 0 0,1 783,217" fill="none" /> {/* R=400 approx */}
-          <path id="pathLineNamePrecise"
-            d="M 244,350 A 360,360 0 0,1 756,350"
-            fill="none" /> {/* R=360, Angle ~200 to ~340? No. */}
+      {/* BL: Line Status */}
+      <div className="absolute bottom-8 left-8 z-30 pointer-events-none select-none">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-widest">
+            Selected Line
+          </div>
+          {isEditMode && <span className="text-xs text-blue-400 font-bold animate-pulse">Running Setup...</span>}
+        </div>
+        <div className="text-5xl font-black tracking-tight text-white drop-shadow-xl">
+          {config.lines[currentLine].name}
+        </div>
+        <div className="mt-2 flex flex-col items-start gap-1">
+          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Current Task</div>
+          <div className={`text-xl font-bold tracking-wide ${currentSession ? 'text-white' : 'text-slate-600'}`}>
+            {currentSession ? currentSession.task : 'IDLE...'}
+          </div>
+        </div>
+      </div>
 
-          {/* Let's Try: R=360. 
-                 Start Angle -120deg (240 deg): x=500+360*(-0.5)=320, y=500+360*(-0.866)=188
-                 End Angle -60deg (300 deg): x=500+360*(0.5)=680, y=188
-             */}
-          <path id="curveTop" d="M 320,188 A 360,360 0 0,1 680,188" fill="none" />
-
-          <text className="fill-slate-500 font-bold tracking-[0.2em] text-sm uppercase" dy="-10">
-            <textPath href="#curveTop" startOffset="50%" textAnchor="middle">
-              Current Line
-            </textPath>
-          </text>
-          <text className="fill-white font-black tracking-tight text-4xl" dy="25">
-            <textPath href="#curveTop" startOffset="50%" textAnchor="middle">
-              {config.lines[currentLine].name}
-            </textPath>
-          </text>
-
-
-          {/* RIGHT: TIME */}
-          {/* R=360. Angle -30 to +30? 
-                 Angle -30 (330): x=811, y=320
-                 Angle +30 (30): x=811, y=680
-             */}
-          <path id="curveRight" d="M 811,320 A 360,360 0 0,1 811,680" fill="none" />
-          <text className="fill-white font-mono font-bold tracking-tighter text-5xl" dy="10">
-            <textPath href="#curveRight" startOffset="50%" textAnchor="middle">
-              {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
-            </textPath>
-          </text>
-          {currentSession && (
-            <text className="fill-emerald-400 font-bold tracking-widest text-xs uppercase" dy="-25">
-              <textPath href="#curveRight" startOffset="50%" textAnchor="middle">
-                ● Recording
-              </textPath>
-            </text>
-          )}
-
-
-          {/* BOTTOM: ACTIVITY */}
-          {/* R=360. Angle 120 to 60? No we want bottom.
-                 Angle 120 to 60 is top.
-                 We want Angle 120 (bottom right) to 240 (bottom left)? No.
-                 Angle 60 (300?) -> No.
-                 Standard Unit Circle: 0=Right, 90=Down. 
-                 Bottom is 90.
-                 We want 60 to 120.
-                 Angle 60: x=680, y=811
-                 Angle 120: x=320, y=811
-                 Direction: usually we want text to be upright?
-                 For bottom text, we draw the path from Right to Left!
-                 Start (680, 811) -> End (320, 811).
-             */}
-          <path id="curveBottom" d="M 720,780 A 360,360 0 0,0 280,780" fill="none" />
-          {/* Using sweep-flag 0 to curve 'inward' relative to center? Or outward? 
-                 M x1 y1 A rx ry rot large-arc sweep x2 y2
-                 Tested mentally: 680,811 to 320,811 with R=360.
-             */}
-
-          <text className="fill-slate-500 font-bold tracking-widest text-xs uppercase" dy="-5">
-            <textPath href="#curveBottom" startOffset="50%" textAnchor="middle">
-              Current Activity
-            </textPath>
-          </text>
-          <text className={`font-black tracking-tight text-3xl ${currentSession ? "fill-white" : "fill-slate-600"}`} dy="25">
-            <textPath href="#curveBottom" startOffset="50%" textAnchor="middle">
-              {currentSession ? currentSession.task : "IDLE"}
-            </textPath>
-          </text>
-
-        </svg>
+      {/* BR: Main Timer */}
+      <div className="absolute bottom-8 right-8 z-30 pointer-events-none select-none text-right">
+        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Elapsed Duration</div>
+        <div className={`text-6xl sm:text-7xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? 'text-white' : 'text-slate-700'}`}>
+          {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
+        </div>
       </div>
 
       {/* Corner Controls (Minimal) */}
-      <div className="absolute bottom-6 left-6 z-40 flex gap-2">
-        <button onClick={() => setIsEditMode(!isEditMode)} className={`p-4 rounded-full backdrop-blur-md border shadow-lg transition-transform hover:scale-110 ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:text-white'}`}>
-          <Settings className={isEditMode ? "animate-spin" : ""} size={24} />
-        </button>
-        {isEditMode && (
-          <button onClick={() => setIsGlobalSettingsOpen(true)} className="p-4 rounded-full bg-slate-900/50 backdrop-blur-md border border-slate-800 text-slate-400 hover:text-white hover:scale-110 shadow-lg"><LayoutDashboard size={24} /></button>
-        )}
-      </div>
-
-      <div className="absolute bottom-6 right-6 z-40 flex gap-2">
-        <button onClick={() => setIsLogOpen(true)} className="p-4 rounded-full bg-slate-900/50 backdrop-blur-md border border-slate-800 text-slate-400 hover:text-white hover:scale-110 shadow-lg"><FileText size={24} /></button>
-        {currentSession && (
-          <button onClick={() => setIsMemoOpen(true)} className="p-4 rounded-full bg-emerald-900/40 backdrop-blur-md border border-emerald-500/50 text-emerald-400 hover:text-emerald-300 hover:scale-110 shadow-lg"><MessageSquare size={24} /></button>
-        )}
-      </div>
-
       {/* Main Wheel (Centered) */}
       <main className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
         {isEditMode && <div className="absolute top-32 text-blue-400 text-xs font-bold animate-bounce uppercase tracking-widest z-40 bg-slate-950/80 px-4 py-1 rounded-full border border-blue-500/30">Edit Mode Active</div>}
-        <div className="transform scale-90 sm:scale-100 xl:scale-110 transition-transform duration-500 pointer-events-auto">
+        <div
+          className="transition-transform duration-500 pointer-events-auto scale-90 sm:scale-100 xl:scale-110"
+        >
           <Wheel
             currentLine={currentLine}
             categories={lineConf.categories}
@@ -484,6 +405,12 @@ function App() {
             onLineClick={handleWheelLineClick}
             onLineDoubleClick={handleWheelLineDoubleClick}
             onCenterClick={handleCenterClick}
+            hudData={{
+              lineName: config.lines[currentLine].name,
+              timeString: currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00",
+              activityString: currentSession ? currentSession.task : "SYSTEM IDLE",
+              isRecording: !!currentSession
+            }}
           />
         </div>
       </main>

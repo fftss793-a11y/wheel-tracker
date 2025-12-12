@@ -323,6 +323,39 @@ const Wheel: React.FC<WheelProps> = ({
         <g>{taskSegments}</g>
         <g className="origin-center">{lineSegments}</g>
         {subCategorySegments}
+
+        {/* Rotating Outer Ring (Active State - Satellite Orbit) */}
+        {/* Rotating Outer Ring (Active State - Satellite Orbit) */}
+        {!isEditMode && isTracking && (
+          <g style={{ opacity: 1 }}>
+            {/* Native SVG Animation to ensure rotation around 0,0 */}
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              from="0 0 0"
+              to="360 0 0"
+              dur="3s"
+              repeatCount="indefinite"
+            />
+
+            {/* Orbit Track (Faint) */}
+            <circle
+              r={EXPANDED_LINE_OUTER_R + 10}
+              fill="none"
+              stroke={currentColor}
+              strokeWidth="1"
+              strokeOpacity="0.2"
+            />
+
+            {/* Satellite Body (The "Comet") */}
+            <g transform={`translate(${EXPANDED_LINE_OUTER_R + 10}, 0)`}>
+              {/* Head */}
+              <circle r={4} fill="#fff" className="drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+              {/* Colored Glow */}
+              <circle r={8} fill={currentColor} fillOpacity="0.5" className="blur-[2px]" />
+            </g>
+          </g>
+        )}
       </svg>
 
       {/* Center FAB */}
