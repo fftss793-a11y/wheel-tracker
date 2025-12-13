@@ -393,6 +393,21 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     )}
                                 </div>
                             </label>
+                            {/* UI Scale Setting */}
+                            <label className="flex items-center justify-between group">
+                                <span className="text-slate-300 text-sm font-medium group-hover:text-white transition-colors">UI サイズ (縮小/拡大)</span>
+                                <div className="flex gap-2 items-center">
+                                    <input
+                                        type="range" min="50" max="150" step="5"
+                                        value={(localConfig.uiScale || 1.0) * 100}
+                                        onChange={e => setLocalConfig({ ...localConfig, uiScale: Number(e.target.value) / 100 })}
+                                        className="w-32 accent-blue-500"
+                                    />
+                                    <span className="w-12 text-right text-white font-mono text-sm">
+                                        {Math.round((localConfig.uiScale || 1.0) * 100)}%
+                                    </span>
+                                </div>
+                            </label>
                         </div>
                     </section>
 

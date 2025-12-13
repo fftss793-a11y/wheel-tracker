@@ -306,7 +306,7 @@ const Wheel: React.FC<WheelProps> = ({
 
   return (
     <div
-      className="relative w-[750px] h-[750px] z-10 mx-auto no-select flex items-center justify-center"
+      className="relative w-[1000px] h-[1000px] z-10 mx-auto no-select flex items-center justify-center"
       onClick={handleContainerClick}
       onMouseLeave={() => { if (expandedTask) setExpandedTask(null); }}
     >
@@ -316,8 +316,8 @@ const Wheel: React.FC<WheelProps> = ({
 
       {/* SVG Container */}
       <svg
-        className={`absolute w-[800px] h-[800px] -m-[25px] overflow-visible drop-shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 ${isEditMode ? 'scale-95' : ''}`}
-        viewBox="-400 -400 800 800"
+        className={`absolute w-[1000px] h-[1000px] -m-[25px] overflow-visible drop-shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 ${isEditMode ? 'scale-95' : ''}`}
+        viewBox="-500 -500 1000 1000"
         onClick={(e) => e.stopPropagation()}
       >
         <g>{taskSegments}</g>
@@ -365,7 +365,7 @@ const Wheel: React.FC<WheelProps> = ({
           onClick={onCenterClick}
           className={`
             relative group
-            w-[160px] h-[160px] rounded-full
+            w-[192px] h-[192px] rounded-full
             flex items-center justify-center
             text-white
             transition-all duration-200 transform

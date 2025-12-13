@@ -387,8 +387,16 @@ function App() {
       </div>
 
       {/* Corner Controls (Minimal) */}
-      {/* Main Wheel (Centered) */}
-      <main className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+      {/* Wheel Container - Centered */}
+      <div
+        className="relative z-10 flex items-center justify-center min-h-screen"
+        style={{
+          transform: `scale(${config.uiScale || 1.0})`,
+          transformOrigin: 'center center',
+          transition: 'transform 0.3s ease-out'
+        }}
+      >
+        {/* Background Ring (Faint) */}
         {isEditMode && <div className="absolute top-32 text-blue-400 text-xs font-bold animate-bounce uppercase tracking-widest z-40 bg-slate-950/80 px-4 py-1 rounded-full border border-blue-500/30">Edit Mode Active</div>}
         <div
           className="transition-transform duration-500 pointer-events-auto scale-90 sm:scale-100 xl:scale-110"
@@ -413,7 +421,7 @@ function App() {
             }}
           />
         </div>
-      </main>
+      </div>
 
       {/* Undo Snackbar */}
       {undoInfo && (

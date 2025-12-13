@@ -76,17 +76,17 @@ export const DEFAULT_CONFIG: AppConfig = {
   maxSessionMin: 540,
   maxSessionAction: 'stop',
   centerIdleAction: 'resume',
-  quickResumeMin: 10
+  quickResumeMin: 10,
+  uiScale: 1.0
 };
 
-// Wheel Geometry (Scaled Up ~30-40% for immersive experience)
-// Previous Diameter: ~400px (Outer 200)
-// New Target Diameter: ~560px
-export const INNER_R = 80;        // Center Button Radius (Diameter 160px)
-export const OUTER_R = 210;       // Task Layer End (Radius 210 / Diameter 420)
-export const LINE_INNER_R = 210;  // Line Layer Start (Gapless)
-export const LINE_OUTER_R = 280;  // Line Layer End (Radius 280 / Diameter 560)
+// Wheel Geometry (Scaled Up +20% from previous 30-40% increase)
+// New Target Diameter: ~672px (Normal) / ~816px (Expanded)
+export const INNER_R = 96;        // 80 * 1.2
+export const OUTER_R = 252;       // 210 * 1.2
+export const LINE_INNER_R = 252;  // 210 * 1.2
+export const LINE_OUTER_R = 336;  // 280 * 1.2
 
 // Expanded State (When sub-menu is open)
-export const EXPANDED_LINE_INNER_R = 290; // Pushed out start (Leave gap for sub-menu)
-export const EXPANDED_LINE_OUTER_R = 340; // Pushed out end
+export const EXPANDED_LINE_INNER_R = 348; // 290 * 1.2
+export const EXPANDED_LINE_OUTER_R = 408; // 340 * 1.2

@@ -22,6 +22,7 @@ export interface AppConfig {
   maxSessionAction: MaxSessionAction;
   centerIdleAction: CenterIdleAction;
   quickResumeMin: number;
+  uiScale?: number;
 }
 
 export interface LogEntry {
