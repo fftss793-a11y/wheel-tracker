@@ -21,11 +21,56 @@ export const LINE_BG_COLORS: Record<LineId, string> = {
 
 export const DEFAULT_CONFIG: AppConfig = {
   lines: {
-    A: { name: 'LINE A', categories: ["段取り", "稼働", "停止", "待機", { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "その他"] }, "休憩"] },
-    B: { name: 'LINE B', categories: ["段取り", "稼働", "停止", "待機", { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "その他"] }, "休憩"] },
-    C: { name: 'LINE C', categories: ["段取り", "稼働", "停止", "待機", { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "その他"] }, "休憩"] },
-    D: { name: 'LINE D', categories: ["段取り", "稼働", "停止", "待機", { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "その他"] }, "休憩"] },
-    E: { name: 'LINE E', categories: ["段取り", "稼働", "停止", "待機", { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "その他"] }, "休憩"] },
+    A: {
+      name: 'LINE A',
+      categories: [
+        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
+        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
+        "休憩"
+      ]
+    },
+    B: {
+      name: 'LINE B',
+      categories: [
+        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
+        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
+        "休憩"
+      ]
+    },
+    C: {
+      name: 'LINE C',
+      categories: [
+        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
+        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
+        "休憩"
+      ]
+    },
+    D: {
+      name: 'LINE D',
+      categories: [
+        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
+        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
+        "休憩"
+      ]
+    },
+    E: {
+      name: 'LINE E',
+      categories: [
+        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
+        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
+        "休憩"
+      ]
+    },
   },
   breakAlerts: ['10:00', '11:45', '15:00'],  // Fixed break time alerts
   maxSessionMin: 540,
