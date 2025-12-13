@@ -360,7 +360,7 @@ function App() {
       </div>
 
       {/* BL: Line Status */}
-      <div className="absolute bottom-8 left-8 z-30 pointer-events-none select-none">
+      <div className="absolute bottom-12 left-8 z-30 pointer-events-none select-none">
         <div className="flex items-center gap-3 mb-2">
           <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-widest">
             Selected Line
@@ -379,7 +379,7 @@ function App() {
       </div>
 
       {/* BR: Main Timer */}
-      <div className="absolute bottom-8 right-8 z-30 pointer-events-none select-none text-right">
+      <div className="absolute bottom-12 right-8 z-30 pointer-events-none select-none text-right">
         <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Elapsed Duration</div>
         <div className={`text-6xl sm:text-7xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? 'text-white' : 'text-slate-700'}`}>
           {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
