@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Settings, FileText, Download, LayoutDashboard, Timer, Clock, ArrowLeft, PenTool, MessageSquare, HelpCircle, Layers } from 'lucide-react';
+import {
+  Play, Square, RotateCcw, Save, Search, X,
+  LayoutDashboard, HelpCircle, FileText, Settings,
+  PenTool, Download, Upload, Plus, Trash2, Edit2, Layers
+} from 'lucide-react';
 import {
   AppConfig, LineId, LogEntry, ActiveSessionsMap, UndoInfo, PromptState
 } from './types';
@@ -339,13 +343,14 @@ function App() {
         {isEditMode && (
           <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
             <button onClick={() => setIsGlobalSettingsOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="全体設定"><LayoutDashboard size={20} /></button>
+            <button onClick={() => { if (confirm('設定を初期化しますか？')) { localStorage.clear(); window.location.reload(); } }} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="設定リセット"><RotateCcw size={20} /></button>
             <button onClick={() => setIsHelpOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ヘルプ"><HelpCircle size={20} /></button>
           </div>
         )}
       </div>
 
       {/* BL: Line Status */}
-      <div className="absolute bottom-24 left-8 z-30 pointer-events-none select-none">
+      <div className="fixed bottom-12 left-8 z-30 pointer-events-none select-none">
         <div className="flex items-center gap-3 mb-2">
           <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-widest">
             Selected Line
@@ -375,7 +380,7 @@ function App() {
       </div>
 
       {/* BR: Main Timer */}
-      <div className="absolute bottom-24 right-8 z-30 pointer-events-none select-none text-right">
+      <div className="fixed bottom-12 right-8 z-30 pointer-events-none select-none text-right">
         <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Elapsed Duration</div>
         <div className={`text-6xl sm:text-7xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? 'text-white' : 'text-slate-700'}`}>
           {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
@@ -395,7 +400,7 @@ function App() {
         {/* Background Ring (Faint) */}
         {isEditMode && <div className="absolute top-32 text-blue-400 text-xs font-bold animate-bounce uppercase tracking-widest z-40 bg-slate-950/80 px-4 py-1 rounded-full border border-blue-500/30">Edit Mode Active</div>}
         <div
-          className="transition-transform duration-500 pointer-events-auto scale-90 sm:scale-100 xl:scale-110"
+          className="transition-transform duration-500 pointer-events-auto scale-[0.8] sm:scale-90 xl:scale-100 -translate-y-12"
         >
           <Wheel
             currentLine={currentLine}
