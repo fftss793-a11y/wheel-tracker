@@ -372,8 +372,19 @@ function App() {
         </div>
         <div className="mt-2 flex flex-col items-start gap-1">
           <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Current Task</div>
-          <div className={`text-xl font-bold tracking-wide ${currentSession ? 'text-white' : 'text-slate-600'}`}>
-            {currentSession ? currentSession.task : 'IDLE...'}
+          <div className="flex items-center gap-3">
+            <div className={`text-xl font-bold tracking-wide ${currentSession ? 'text-white' : 'text-slate-600'}`}>
+              {currentSession ? currentSession.task : 'IDLE...'}
+            </div>
+            {currentSession && (
+              <button
+                onClick={() => setIsMemoOpen(true)}
+                className="pointer-events-auto p-2 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-all shadow-lg active:scale-95 flex-shrink-0"
+                title="Save Memo"
+              >
+                <PenTool size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>
