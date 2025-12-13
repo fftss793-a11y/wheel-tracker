@@ -222,21 +222,7 @@ function App() {
     resetMaxTimer(line);
   };
 
-  const handleCsvExport = () => {
-    const all = getAllLogs().sort((a, b) => a.startedAt - b.startedAt);
-    const header = ['ラインID', 'ライン名', 'タスク', '開始日時', '終了日時', '所要時間(秒)', '理由', 'メモ'];
-    const rows = all.map(l => {
-      const dur = Math.round((l.endedAt - l.startedAt) / 1000);
-      const escape = (s: string) => `"${String(s || '').replace(/"/g, '""')}"`;
-      const formatDate = (ts: number) => new Date(ts).toLocaleString('ja-JP');
-      return [l.line, escape(l.lineName), escape(l.task), escape(formatDate(l.startedAt)), escape(formatDate(l.endedAt)), dur, escape(l.reason), escape(l.memo)].join(',');
-    });
-    const blob = new Blob([[header.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `timelogs_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  };
+
 
   // --- Logic: Click Handling ---
   const handleWheelTaskClick = (task: string) => {
@@ -452,7 +438,6 @@ function App() {
         isOpen={isLogOpen}
         onClose={() => setIsLogOpen(false)}
         logs={getAllLogs()}
-        onExport={handleCsvExport}
       />
 
       {/* Settings Modals */}

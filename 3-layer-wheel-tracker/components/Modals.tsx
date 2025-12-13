@@ -43,10 +43,9 @@ interface LogModalProps {
     isOpen: boolean;
     onClose: () => void;
     logs: LogEntry[];
-    onExport: () => void;
 }
 
-export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onExport }) => {
+export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => {
     const [query, setQuery] = useState('');
 
     if (!isOpen) return null;
@@ -62,7 +61,23 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onExp
             );
         })
         .sort((a, b) => b.endedAt - a.endedAt)
+        .sort((a, b) => b.endedAt - a.endedAt)
         .slice(0, 500);
+
+    const handleExport = () => {
+        const header = ['ラインID', 'ライン名', 'タスク', '開始日時', '終了日時', '所要時間(秒)', '理由', 'メモ'];
+        const rows = filteredLogs.map(l => {
+            const dur = Math.round((l.endedAt - l.startedAt) / 1000);
+            const escape = (s: string) => `"${String(s || '').replace(/"/g, '""')}"`;
+            const formatDate = (ts: number) => new Date(ts).toLocaleString('ja-JP');
+            return [l.line, escape(l.lineName), escape(l.task), escape(formatDate(l.startedAt)), escape(formatDate(l.endedAt)), dur, escape(l.reason), escape(l.memo)].join(',');
+        });
+        const blob = new Blob([[header.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `timelogs_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    };
 
     return (
         <div className="fixed inset-0 bg-[#020617]/95 backdrop-blur-md z-[1200] flex flex-col text-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -72,6 +87,9 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onExp
                     <FileDown className="w-5 h-5 text-blue-400" />
                     ログ履歴
                 </h2>
+                <button onClick={handleExport} className="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 rounded-lg shrink-0 text-slate-400 hover:text-white transition-all shadow-sm mr-2" title="CSVエクスポート">
+                    <Download className="w-5 h-5" />
+                </button>
                 <div className="flex-1 relative max-w-md ml-auto mr-3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <input
@@ -82,9 +100,6 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onExp
                         className="w-full bg-[#1a2238] border border-slate-700 rounded-lg py-2 pl-9 pr-4 text-sm text-slate-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     />
                 </div>
-                <button onClick={onExport} className="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 rounded-lg shrink-0 text-slate-400 hover:text-white transition-all shadow-sm" title="CSVエクスポート">
-                    <Download className="w-5 h-5" />
-                </button>
                 <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg shrink-0 text-slate-400 hover:text-white transition-colors">
                     <X className="w-6 h-6" />
                 </button>
@@ -92,7 +107,13 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onExp
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                <div className="max-w-5xl mx-auto grid gap-2">
+                <div className="max-w-5xl mx-auto flex flex-col gap-2">
+                    {/* Header Bar */}
+                    <div className="sticky top-0 z-10 grid grid-cols-[100px_1fr] md:grid-cols-[120px_1fr_1fr] gap-x-4 px-3 py-2 bg-[#020617] border-b border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        <div>Line</div>
+                        <div>Task</div>
+                        <div className="col-span-2 md:col-span-1 text-right md:text-left">Time / Detail</div>
+                    </div>
                     {filteredLogs.map(log => (
                         <div key={log.id} className="grid grid-cols-[100px_1fr] md:grid-cols-[120px_1fr_1fr] gap-x-4 gap-y-1 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-700 transition-all text-xs md:text-sm">
                             <div className="flex items-center">
