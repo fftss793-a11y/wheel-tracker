@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { AppConfig, LineId, LogEntry, Category, CategoryItem, SavedTemplate } from '../types';
 import { LINES, LINE_COLORS } from '../constants';
 import { formatDateTime, formatDurationVerbose, uuid } from '../utils';
-import { X, Search, FileDown, Upload, RotateCcw, Save, Pencil, Settings2, Layers, Trash2, Plus } from 'lucide-react';
+import { X, Search, FileDown, Upload, RotateCcw, Save, Pencil, Settings2, Layers, Trash2, Plus, Download } from 'lucide-react';
+
 
 /* --- Prompt Modal --- */
 interface PromptModalProps {
@@ -42,9 +43,10 @@ interface LogModalProps {
     isOpen: boolean;
     onClose: () => void;
     logs: LogEntry[];
+    onExport: () => void;
 }
 
-export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => {
+export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onExport }) => {
     const [query, setQuery] = useState('');
 
     if (!isOpen) return null;
@@ -70,7 +72,7 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
                     <FileDown className="w-5 h-5 text-blue-400" />
                     ログ履歴
                 </h2>
-                <div className="flex-1 relative max-w-md ml-auto">
+                <div className="flex-1 relative max-w-md ml-auto mr-3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <input
                         type="text"
@@ -80,6 +82,9 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
                         className="w-full bg-[#1a2238] border border-slate-700 rounded-lg py-2 pl-9 pr-4 text-sm text-slate-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     />
                 </div>
+                <button onClick={onExport} className="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 rounded-lg shrink-0 text-slate-400 hover:text-white transition-all shadow-sm" title="CSVエクスポート">
+                    <Download className="w-5 h-5" />
+                </button>
                 <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg shrink-0 text-slate-400 hover:text-white transition-colors">
                     <X className="w-6 h-6" />
                 </button>

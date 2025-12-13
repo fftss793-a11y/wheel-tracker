@@ -452,6 +452,7 @@ function App() {
         isOpen={isLogOpen}
         onClose={() => setIsLogOpen(false)}
         logs={getAllLogs()}
+        onExport={handleCsvExport}
       />
 
       {/* Settings Modals */}
