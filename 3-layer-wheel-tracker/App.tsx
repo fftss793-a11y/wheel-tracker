@@ -164,7 +164,7 @@ function App() {
     }
   }, [config.maxSessionMin, config.maxSessionAction, currentLine]);
 
-  const startTracking = (line: LineId, task: string) => {
+  const startTracking = (line: LineId, task: string, initialMemo: string = '') => {
     touch();
     const active = activeSessions[line];
     if (active) {
@@ -180,8 +180,8 @@ function App() {
       saveLog(line, log);
       showUndo({ type: 'autostop', line, log });
     }
-    setActiveSessions(prev => ({ ...prev, [line]: { task, startedAt: Date.now(), memo: '' } }));
-    setCurrentMemo('');
+    setActiveSessions(prev => ({ ...prev, [line]: { task, startedAt: Date.now(), memo: initialMemo } }));
+    setCurrentMemo(initialMemo);
     resetMaxTimer(line);
   };
 
@@ -468,13 +468,9 @@ function App() {
         onClose={() => setIsMemoOpen(false)}
         memo={currentMemo}
         onSave={(memo) => {
-          setCurrentMemo(memo);
-          // Update active session with memo
+          // If memo changes, split the log: Stop current -> Start new with new memo
           if (activeSessions[currentLine]) {
-            setActiveSessions(prev => ({
-              ...prev,
-              [currentLine]: { ...prev[currentLine]!, memo }
-            }));
+            startTracking(currentLine, activeSessions[currentLine]!.task, memo);
           }
         }}
       />
