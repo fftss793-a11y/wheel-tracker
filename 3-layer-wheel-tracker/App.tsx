@@ -343,7 +343,6 @@ function App() {
         {isEditMode && (
           <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
             <button onClick={() => setIsGlobalSettingsOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="全体設定"><LayoutDashboard size={20} /></button>
-            <button onClick={() => { if (confirm('設定を初期化しますか？')) { localStorage.clear(); window.location.reload(); } }} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="設定リセット"><RotateCcw size={20} /></button>
             <button onClick={() => setIsHelpOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ヘルプ"><HelpCircle size={20} /></button>
           </div>
         )}
@@ -466,7 +465,16 @@ function App() {
         onClose={() => setIsGlobalSettingsOpen(false)}
         config={config}
         onSave={(newConf) => { setConfig(newConf); setIsGlobalSettingsOpen(false); }}
-        onReset={() => { setConfig(DEFAULT_CONFIG); setIsGlobalSettingsOpen(false); }}
+        onReset={() => {
+          if (!confirm('設定を初期化しますか？')) return;
+          localStorage.removeItem(STORAGE_KEY_CONFIG);
+          window.location.reload();
+        }}
+        onDeleteLogs={() => {
+          if (!confirm('すべてのログを削除しますか？この操作は取り消せません。')) return;
+          LINES.forEach(line => localStorage.removeItem(`${STORAGE_KEY_LOGS_PREFIX}${line}`));
+          window.location.reload();
+        }}
       />
       <MemoModal
         isOpen={isMemoOpen}

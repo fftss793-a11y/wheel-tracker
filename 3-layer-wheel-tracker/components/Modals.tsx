@@ -308,9 +308,10 @@ interface GlobalSettingsModalProps {
     config: AppConfig;
     onSave: (newConfig: AppConfig) => void;
     onReset: () => void;
+    onDeleteLogs: () => void;
 }
 
-export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClose, config, onSave, onReset }) => {
+export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClose, config, onSave, onReset, onDeleteLogs }) => {
     const [localConfig, setLocalConfig] = useState<AppConfig>(config);
 
     useEffect(() => {
@@ -441,7 +442,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                     <section>
                         <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">データ管理</h3>
                         <div className="grid grid-cols-4 gap-3">
-                            <button onClick={handleExport} className="flex flex-col items-center gap-2 p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                            <button type="button" onClick={handleExport} className="flex flex-col items-center gap-2 p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
                                 <FileDown size={20} className="text-slate-400" />
                                 <span className="text-xs font-bold text-slate-300">設定書出</span>
                             </button>
@@ -450,16 +451,11 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                 <span className="text-xs font-bold text-slate-300">設定取込</span>
                                 <input type="file" accept=".json" className="hidden" onChange={handleImport} />
                             </label>
-                            <button onClick={() => { if (confirm('設定を初期化しますか？')) onReset(); }} className="flex flex-col items-center gap-2 p-3 bg-slate-800 rounded-lg hover:bg-red-900/30 transition-colors border border-slate-700 hover:border-red-800">
+                            <button type="button" onClick={onReset} className="flex flex-col items-center gap-2 p-3 bg-slate-800 rounded-lg hover:bg-red-900/30 transition-colors border border-slate-700 hover:border-red-800">
                                 <RotateCcw size={20} className="text-red-500" />
                                 <span className="text-xs font-bold text-red-400">初期化</span>
                             </button>
-                            <button onClick={() => {
-                                if (confirm('すべてのログを削除しますか？この操作は取り消せません。')) {
-                                    ['A', 'B', 'C', 'D', 'E'].forEach(line => localStorage.removeItem(`timelogs_v2_${line}`));
-                                    alert('ログを削除しました');
-                                }
-                            }} className="flex flex-col items-center gap-2 p-3 bg-slate-800 rounded-lg hover:bg-red-900/30 transition-colors border border-slate-700 hover:border-red-800">
+                            <button type="button" onClick={onDeleteLogs} className="flex flex-col items-center gap-2 p-3 bg-slate-800 rounded-lg hover:bg-red-900/30 transition-colors border border-slate-700 hover:border-red-800">
                                 <X size={20} className="text-red-500" />
                                 <span className="text-xs font-bold text-red-400">ログ削除</span>
                             </button>
