@@ -351,8 +351,7 @@ function App() {
           <button onClick={() => setIsEditMode(!isEditMode)} className={`p-3 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={20} /></button>
         </div>
         {isEditMode && (
-          <div className="flex gap-2 animate-in fade-in slide-in-from-top-2">
-            <button onClick={handleCsvExport} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="CSV出力"><Download size={20} /></button>
+          <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
             <button onClick={() => setIsGlobalSettingsOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="全体設定"><LayoutDashboard size={20} /></button>
             <button onClick={() => setIsHelpOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ヘルプ"><HelpCircle size={20} /></button>
           </div>
