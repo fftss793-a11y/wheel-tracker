@@ -14,6 +14,7 @@ export interface LineConfig {
 
 export type CenterIdleAction = 'none' | 'resume' | 'openLineRing' | 'startDefault';
 export type MaxSessionAction = 'stop' | 'prompt';
+export type ThemeMode = 'dark' | 'light';
 
 export interface AppConfig {
   lines: Record<LineId, LineConfig>;
@@ -23,6 +24,7 @@ export interface AppConfig {
   centerIdleAction: CenterIdleAction;
   quickResumeMin: number;
   uiScale?: number;
+  theme: ThemeMode;
 }
 
 export interface LogEntry {

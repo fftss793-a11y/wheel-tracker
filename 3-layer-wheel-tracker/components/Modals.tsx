@@ -435,6 +435,26 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     </span>
                                 </div>
                             </label>
+                            {/* Theme Setting */}
+                            <label className="flex items-center justify-between group">
+                                <span className="text-slate-300 text-sm font-medium group-hover:text-white transition-colors">背景テーマ</span>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setLocalConfig({ ...localConfig, theme: 'dark' })}
+                                        className={`px-3 py-1.5 rounded text-sm font-bold transition-all ${localConfig.theme === 'dark' ? 'bg-slate-700 text-white ring-2 ring-blue-500' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                                    >
+                                        ダーク
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setLocalConfig({ ...localConfig, theme: 'light' })}
+                                        className={`px-3 py-1.5 rounded text-sm font-bold transition-all ${localConfig.theme === 'light' ? 'bg-white text-slate-900 ring-2 ring-blue-500' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                                    >
+                                        ライト
+                                    </button>
+                                </div>
+                            </label>
                         </div>
                     </section>
 

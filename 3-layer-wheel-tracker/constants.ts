@@ -77,7 +77,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   maxSessionAction: 'stop',
   centerIdleAction: 'resume',
   quickResumeMin: 10,
-  uiScale: 1.0
+  uiScale: 1.0,
+  theme: 'dark'
 };
 
 // Wheel Geometry (Scaled Up +20% from previous 30-40% increase)

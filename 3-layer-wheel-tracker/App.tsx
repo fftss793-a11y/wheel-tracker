@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Play, Square, RotateCcw, Save, Search, X,
   LayoutDashboard, HelpCircle, FileText, Settings,
-  PenTool, Download, Upload, Plus, Trash2, Edit2, Layers
+  PenTool, Download, Upload, Plus, Trash2, Edit2, Layers, LogOut
 } from 'lucide-react';
 import {
   AppConfig, LineId, LogEntry, ActiveSessionsMap, UndoInfo, PromptState
@@ -277,6 +277,62 @@ function App() {
     }
   };
 
+  // --- End of Day Handler ---
+  const handleEndOfDay = () => {
+    setPromptState({
+      isOpen: true,
+      message: '本日の業務を終了しますか？\n\n• 実行中のタスクを停止\n• ログをCSVエクスポート\n• ログデータをクリア',
+      onConfirm: () => {
+        // 1. Stop all active sessions
+        LINES.forEach(line => {
+          if (activeSessions[line]) {
+            const active = activeSessions[line]!;
+            const log: LogEntry = {
+              id: uuid(),
+              line,
+              lineName: config.lines[line].name,
+              task: active.task,
+              startedAt: active.startedAt,
+              endedAt: Date.now(),
+              reason: '終業',
+              memo: active.memo
+            };
+            const logs = getLogs(line);
+            logs.push(log);
+            localStorage.setItem(`${STORAGE_KEY_LOGS_PREFIX}${line}`, JSON.stringify(logs));
+          }
+        });
+        setActiveSessions({ A: null, B: null, C: null, D: null, E: null });
+
+        // 2. Export all logs to CSV
+        const allLogs = LINES.flatMap(line => {
+          try { return JSON.parse(localStorage.getItem(`${STORAGE_KEY_LOGS_PREFIX}${line}`) || '[]'); } catch { return []; }
+        }).sort((a: LogEntry, b: LogEntry) => a.startedAt - b.startedAt);
+
+        if (allLogs.length > 0) {
+          const header = ['ラインID', 'ライン名', 'タスク', '開始日時', '終了日時', '所要時間(秒)', '理由', 'メモ'];
+          const rows = allLogs.map((l: LogEntry) => {
+            const dur = Math.round((l.endedAt - l.startedAt) / 1000);
+            const esc = (s: string | undefined) => `"${String(s || '').replace(/"/g, '""')}"`;
+            const formatDate = (ts: number) => new Date(ts).toLocaleString('ja-JP');
+            return [l.line, esc(l.lineName), esc(l.task), esc(formatDate(l.startedAt)), esc(formatDate(l.endedAt)), dur, esc(l.reason), esc(l.memo)].join(',');
+          });
+          const blob = new Blob([[header.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `timelogs_${new Date().toISOString().slice(0, 10)}.csv`;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        // 3. Clear logs from localStorage
+        LINES.forEach(line => localStorage.removeItem(`${STORAGE_KEY_LOGS_PREFIX}${line}`));
+
+        setPromptState(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => setPromptState(prev => ({ ...prev, isOpen: false }))
+    });
+  };
+
   // --- Keyboard ---
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -303,13 +359,14 @@ function App() {
   const lineConf = config.lines[currentLine];
   const currentSession = activeSessions[currentLine];
   const currentColor = LINE_COLORS[currentLine];
+  const isLightTheme = config.theme === 'light';
 
   return (
-    <div className={`min-h-screen w-full relative overflow-hidden bg-slate-950 text-slate-100 font-sans selection:bg-blue-500/30 ${isEditMode ? 'ring-8 ring-inset ring-blue-500/20' : ''}`}>
+    <div className={`min-h-screen w-full relative overflow-hidden font-sans selection:bg-blue-500/30 transition-colors duration-500 ${isLightTheme ? 'bg-slate-100 text-slate-900' : 'bg-slate-950 text-slate-100'} ${isEditMode ? 'ring-8 ring-inset ring-blue-500/20' : ''}`}>
 
       {/* Background Decor */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] rounded-full opacity-5 blur-[120px] pointer-events-none transition-colors duration-1000"
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] rounded-full blur-[120px] pointer-events-none transition-colors duration-1000 ${isLightTheme ? 'opacity-10' : 'opacity-5'}`}
         style={{ backgroundColor: currentColor }}
       />
 
@@ -337,6 +394,9 @@ function App() {
       {/* TR: System Controls */}
       <div className="absolute top-6 right-8 z-40 flex flex-col gap-3 items-end">
         <div className="flex gap-2">
+          <button onClick={handleEndOfDay} className="p-3 rounded-lg bg-orange-600/80 border border-orange-500 text-white hover:bg-orange-500 transition-all shadow-lg" title="終業">
+            <LogOut size={20} />
+          </button>
           <button onClick={() => setIsLogOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ログ"><FileText size={20} /></button>
           <button onClick={() => setIsEditMode(!isEditMode)} className={`p-3 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={20} /></button>
         </div>
