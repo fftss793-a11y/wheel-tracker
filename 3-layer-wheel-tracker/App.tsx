@@ -403,6 +403,9 @@ function App() {
           <button onClick={handleEndOfDay} className="p-3 rounded-lg bg-orange-600/80 border border-orange-500 text-white hover:bg-orange-500 transition-all shadow-lg" title="終業">
             <LogOut size={20} />
           </button>
+          <button onClick={() => setIsTemplateOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="テンプレート">
+            <Layers size={20} />
+          </button>
           <button onClick={() => setIsLogOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ログ"><FileText size={20} /></button>
           <button onClick={() => setIsEditMode(!isEditMode)} className={`p-3 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={20} /></button>
         </div>
