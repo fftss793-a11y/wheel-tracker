@@ -631,58 +631,64 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             🎯 基本操作
                         </h3>
                         <ul className="space-y-2 ml-4">
-                            <li><span className="text-white font-bold">ホイール内側</span>: タスク（段取り、稼働など）をクリックして計測開始</li>
+                            <li><span className="text-white font-bold">ホイール内側</span>: タスクをクリックして計測開始</li>
                             <li><span className="text-white font-bold">ホイール外側</span>: ライン(A〜E)をクリックして切り替え</li>
                             <li><span className="text-white font-bold">中央ボタン</span>: 計測中はクリックで停止</li>
                             <li><span className="text-white font-bold">ダブルクリック</span>: ライン部分をダブルクリックで「立ち下げ」開始</li>
+                            <li><span className="text-white font-bold">サブカテゴリ</span>: タスクにサブカテゴリがある場合、ホバーで展開</li>
                         </ul>
                     </section>
 
-                    {/* Header Buttons */}
+                    {/* Settings Menu */}
                     <section>
                         <h3 className="text-blue-400 font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-                            🔘 ヘッダーボタン
+                            ⚙️ 設定メニュー（右上の歯車アイコン）
                         </h3>
                         <ul className="space-y-2 ml-4">
-                            <li><span className="text-white font-bold">📄 ログ</span>: 作業履歴を確認</li>
-                            <li><span className="text-white font-bold">⬇️ CSV</span>: ログをCSVファイルでダウンロード</li>
-                            <li><span className="text-white font-bold">⚙️ 設定</span>: 編集モードに切り替え（ライン名・タスク編集）</li>
+                            <li><span className="text-white font-bold">🚪 終業</span>: タスク停止 → CSV保存 → ログクリア</li>
+                            <li><span className="text-white font-bold">📁 テンプレート</span>: 設定を保存・読み込み</li>
+                            <li><span className="text-white font-bold">📄 ログ</span>: 作業履歴を確認・メモ編集・CSVエクスポート</li>
+                            <li><span className="text-white font-bold">🎛️ 全体設定</span>: タイマー・UI・テーマの設定</li>
+                            <li><span className="text-white font-bold">❓ ヘルプ</span>: この画面</li>
                         </ul>
+                        <p className="mt-2 text-slate-500 text-xs">※ ホイールのライン部分をクリックするとライン名・タスク項目を編集できます</p>
                     </section>
 
                     {/* Dashboard */}
                     <section>
                         <h3 className="text-blue-400 font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-                            📊 ダッシュボード
+                            📊 ダッシュボード（四隅の表示）
                         </h3>
                         <ul className="space-y-2 ml-4">
-                            <li><span className="text-white font-bold">Current Line</span>: 現在選択中のライン</li>
-                            <li><span className="text-white font-bold">Elapsed Time</span>: 計測経過時間</li>
-                            <li><span className="text-white font-bold">💬 メモ</span>: 計測中にメモを追加（ログ・CSVに反映）</li>
+                            <li><span className="text-white font-bold">左上</span>: 現在時刻・日付</li>
+                            <li><span className="text-white font-bold">左下</span>: 選択中ライン・タスク名・メモボタン</li>
+                            <li><span className="text-white font-bold">右下</span>: 経過時間</li>
                         </ul>
                     </section>
 
-                    {/* Settings */}
+                    {/* Global Settings */}
                     <section>
                         <h3 className="text-blue-400 font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-                            ⚙️ グローバル設定
+                            🎛️ 全体設定の項目
                         </h3>
                         <ul className="space-y-2 ml-4">
-                            <li><span className="text-white font-bold">無操作休憩の提案</span>: 指定時間操作がないと「休憩にしますか？」と表示</li>
-                            <li><span className="text-white font-bold">最大連続時間の上限</span>: 指定時間で計測を自動終了または確認</li>
-                            <li><span className="text-white font-bold">中央ボタンの動作</span>: アイドル時のクリック動作を設定</li>
+                            <li><span className="text-white font-bold">休憩時間の案内</span>: 指定時刻に休憩を提案</li>
+                            <li><span className="text-white font-bold">最大連続時間</span>: 上限時間で自動終了または確認</li>
+                            <li><span className="text-white font-bold">UIサイズ</span>: ホイールの拡大・縮小</li>
+                            <li><span className="text-white font-bold">ホイール位置</span>: 上下位置の調整</li>
+                            <li><span className="text-white font-bold">背景テーマ</span>: ダーク/ライト切り替え</li>
                         </ul>
                     </section>
 
                     {/* Shortcuts */}
                     <section>
                         <h3 className="text-blue-400 font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-                            ⌨️ キーボード
+                            ⌨️ キーボードショートカット
                         </h3>
                         <ul className="space-y-2 ml-4">
                             <li><span className="text-white font-bold">1〜5</span>: ラインA〜Eに切り替え</li>
                             <li><span className="text-white font-bold">Space</span>: 計測停止</li>
-                            <li><span className="text-white font-bold">Esc</span>: モーダルを閉じる</li>
+                            <li><span className="text-white font-bold">Esc</span>: モーダルを閉じる / 設定モード終了</li>
                         </ul>
                     </section>
                 </div>
