@@ -43,10 +43,13 @@ interface LogModalProps {
     isOpen: boolean;
     onClose: () => void;
     logs: LogEntry[];
+    onUpdateMemo?: (logId: string, line: LineId, newMemo: string) => void;
 }
 
-export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => {
+export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpdateMemo }) => {
     const [query, setQuery] = useState('');
+    const [editingLogId, setEditingLogId] = useState<string | null>(null);
+    const [editMemo, setEditMemo] = useState('');
 
     if (!isOpen) return null;
 
@@ -77,6 +80,24 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
         a.href = URL.createObjectURL(blob);
         a.download = `timelogs_${new Date().toISOString().slice(0, 10)}.csv`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    };
+
+    const handleStartEdit = (log: LogEntry) => {
+        setEditingLogId(log.id);
+        setEditMemo(log.memo || '');
+    };
+
+    const handleSaveEdit = (log: LogEntry) => {
+        if (onUpdateMemo) {
+            onUpdateMemo(log.id, log.line, editMemo);
+        }
+        setEditingLogId(null);
+        setEditMemo('');
+    };
+
+    const handleCancelEdit = () => {
+        setEditingLogId(null);
+        setEditMemo('');
     };
 
     return (
@@ -132,7 +153,27 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
                                 <span className="opacity-30">→</span>
                                 {formatDateTime(log.endedAt)}
                                 <span className="ml-3 text-blue-300 font-bold">({formatDurationVerbose(log.startedAt, log.endedAt)})</span>
-                                {log.memo && <span className="ml-2 text-green-400 text-[10px] border border-green-500/30 px-1.5 py-0.5 rounded bg-green-500/10">📝 {log.memo}</span>}
+                                {editingLogId === log.id ? (
+                                    <div className="flex items-center gap-1 ml-2">
+                                        <input
+                                            type="text"
+                                            value={editMemo}
+                                            onChange={e => setEditMemo(e.target.value)}
+                                            className="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-32 focus:outline-none focus:border-blue-500"
+                                            autoFocus
+                                            onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(log); if (e.key === 'Escape') handleCancelEdit(); }}
+                                        />
+                                        <button onClick={() => handleSaveEdit(log)} className="text-green-400 hover:text-green-300 text-[10px] px-1">✓</button>
+                                        <button onClick={handleCancelEdit} className="text-red-400 hover:text-red-300 text-[10px] px-1">✕</button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => handleStartEdit(log)}
+                                        className={`ml-2 text-[10px] border px-1.5 py-0.5 rounded transition-colors ${log.memo ? 'text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20' : 'text-slate-500 border-slate-600 hover:text-slate-300 hover:border-slate-500'}`}
+                                    >
+                                        📝 {log.memo || 'メモ追加'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -142,6 +183,7 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
         </div>
     );
 };
+
 
 /* --- Specific Line Settings Modal --- */
 interface LineSettingsModalProps {
@@ -432,6 +474,21 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     />
                                     <span className="w-12 text-right text-white font-mono text-sm">
                                         {Math.round((localConfig.uiScale || 1.0) * 100)}%
+                                    </span>
+                                </div>
+                            </label>
+                            {/* Wheel Position Setting */}
+                            <label className="flex items-center justify-between group">
+                                <span className="text-slate-300 text-sm font-medium group-hover:text-white transition-colors">ホイール位置 (上下)</span>
+                                <div className="flex gap-2 items-center">
+                                    <input
+                                        type="range" min="-100" max="100" step="5"
+                                        value={localConfig.wheelOffsetY || 0}
+                                        onChange={e => setLocalConfig({ ...localConfig, wheelOffsetY: Number(e.target.value) })}
+                                        className="w-32 accent-blue-500"
+                                    />
+                                    <span className="w-12 text-right text-white font-mono text-sm">
+                                        {localConfig.wheelOffsetY || 0}px
                                     </span>
                                 </div>
                             </label>

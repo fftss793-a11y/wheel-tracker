@@ -90,6 +90,12 @@ function App() {
     localStorage.setItem(`${STORAGE_KEY_LOGS_PREFIX}${line}`, JSON.stringify(newLogs));
   };
 
+  const updateLogMemo = (logId: string, line: LineId, newMemo: string) => {
+    const logs = getLogs(line);
+    const updatedLogs = logs.map(l => l.id === logId ? { ...l, memo: newMemo } : l);
+    localStorage.setItem(`${STORAGE_KEY_LOGS_PREFIX}${line}`, JSON.stringify(updatedLogs));
+  };
+
   // --- Logic: Interaction Tracking ---
   const touch = useCallback(() => {
     lastInteractionRef.current = Date.now();
@@ -459,7 +465,8 @@ function App() {
         {/* Background Ring (Faint) */}
         {isEditMode && <div className="absolute top-32 text-blue-400 text-xs font-bold animate-bounce uppercase tracking-widest z-40 bg-slate-950/80 px-4 py-1 rounded-full border border-blue-500/30">Edit Mode Active</div>}
         <div
-          className="transition-transform duration-500 pointer-events-auto scale-[0.8] sm:scale-90 xl:scale-100 -translate-y-12"
+          className="transition-transform duration-500 pointer-events-auto scale-[0.8] sm:scale-90 xl:scale-100"
+          style={{ transform: `translateY(${(config.wheelOffsetY || 0) - 12}px)` }}
         >
           <Wheel
             currentLine={currentLine}
@@ -502,6 +509,7 @@ function App() {
         isOpen={isLogOpen}
         onClose={() => setIsLogOpen(false)}
         logs={getAllLogs()}
+        onUpdateMemo={updateLogMemo}
       />
 
       {/* Settings Modals */}

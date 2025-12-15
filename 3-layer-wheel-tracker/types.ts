@@ -24,6 +24,7 @@ export interface AppConfig {
   centerIdleAction: CenterIdleAction;
   quickResumeMin: number;
   uiScale?: number;
+  wheelOffsetY?: number;  // Vertical offset for wheel position (-100 to 100)
   theme: ThemeMode;
 }
 
