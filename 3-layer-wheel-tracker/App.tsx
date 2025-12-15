@@ -382,7 +382,7 @@ function App() {
 
       {/* TL: Clock & Date */}
       <div className="absolute top-6 left-8 z-30 pointer-events-none select-none">
-        <div className="text-5xl font-bold tracking-tighter text-white drop-shadow-lg font-mono">
+        <div className={`text-5xl font-bold tracking-tighter drop-shadow-lg font-mono ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
           {new Date(now).toLocaleTimeString('en-US', { hour12: false })}
           <span className="text-xl text-slate-500 ml-2 align-baseline font-sans tracking-normal">{new Date(now).getMilliseconds().toString().padStart(3, '0').slice(0, 2)}</span>
         </div>
@@ -416,13 +416,13 @@ function App() {
           </div>
           {isEditMode && <span className="text-xs text-blue-400 font-bold animate-pulse">Running Setup...</span>}
         </div>
-        <div className="text-5xl font-black tracking-tight text-white drop-shadow-xl">
+        <div className={`text-5xl font-black tracking-tight drop-shadow-xl ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
           {config.lines[currentLine].name}
         </div>
         <div className="mt-2 flex flex-col items-start gap-1">
           <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Current Task</div>
           <div className="flex items-center gap-3">
-            <div className={`text-xl font-bold tracking-wide ${currentSession ? 'text-white' : 'text-slate-600'}`}>
+            <div className={`text-xl font-bold tracking-wide ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-500'}`}>
               {currentSession ? currentSession.task : 'IDLE...'}
             </div>
             {currentSession && (
@@ -441,7 +441,7 @@ function App() {
       {/* BR: Main Timer */}
       <div className="fixed bottom-12 right-8 z-30 pointer-events-none select-none text-right">
         <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Elapsed Duration</div>
-        <div className={`text-6xl sm:text-7xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? 'text-white' : 'text-slate-700'}`}>
+        <div className={`text-6xl sm:text-7xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-500'}`}>
           {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
         </div>
       </div>
