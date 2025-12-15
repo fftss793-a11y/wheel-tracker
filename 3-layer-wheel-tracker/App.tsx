@@ -310,12 +310,12 @@ function App() {
         }).sort((a: LogEntry, b: LogEntry) => a.startedAt - b.startedAt);
 
         if (allLogs.length > 0) {
-          const header = ['ラインID', 'ライン名', 'タスク', '開始日時', '終了日時', '所要時間(秒)', '理由', 'メモ'];
+          const header = ['ラインID', 'ライン名', 'タスク', '開始日時', '終了日時', '所要時間(秒)', 'メモ'];
           const rows = allLogs.map((l: LogEntry) => {
             const dur = Math.round((l.endedAt - l.startedAt) / 1000);
             const esc = (s: string | undefined) => `"${String(s || '').replace(/"/g, '""')}"`;
             const formatDate = (ts: number) => new Date(ts).toLocaleString('ja-JP');
-            return [l.line, esc(l.lineName), esc(l.task), esc(formatDate(l.startedAt)), esc(formatDate(l.endedAt)), dur, esc(l.reason), esc(l.memo)].join(',');
+            return [l.line, esc(l.lineName), esc(l.task), esc(formatDate(l.startedAt)), esc(formatDate(l.endedAt)), dur, esc(l.memo)].join(',');
           });
           const blob = new Blob([[header.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
           const a = document.createElement('a');

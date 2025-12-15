@@ -65,12 +65,12 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
         .slice(0, 500);
 
     const handleExport = () => {
-        const header = ['ラインID', 'ライン名', 'タスク', '開始日時', '終了日時', '所要時間(秒)', '理由', 'メモ'];
+        const header = ['ラインID', 'ライン名', 'タスク', '開始日時', '終了日時', '所要時間(秒)', 'メモ'];
         const rows = filteredLogs.map(l => {
             const dur = Math.round((l.endedAt - l.startedAt) / 1000);
             const escape = (s: string) => `"${String(s || '').replace(/"/g, '""')}"`;
             const formatDate = (ts: number) => new Date(ts).toLocaleString('ja-JP');
-            return [l.line, escape(l.lineName), escape(l.task), escape(formatDate(l.startedAt)), escape(formatDate(l.endedAt)), dur, escape(l.reason), escape(l.memo)].join(',');
+            return [l.line, escape(l.lineName), escape(l.task), escape(formatDate(l.startedAt)), escape(formatDate(l.endedAt)), dur, escape(l.memo)].join(',');
         });
         const blob = new Blob([[header.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement('a');
@@ -86,6 +86,7 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
                 <h2 className="text-lg font-bold text-white shrink-0 flex items-center gap-2">
                     <FileDown className="w-5 h-5 text-blue-400" />
                     ログ履歴
+                    <span className="text-sm font-normal text-slate-400">({filteredLogs.length}件)</span>
                 </h2>
                 <button onClick={handleExport} className="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 rounded-lg shrink-0 text-slate-400 hover:text-white transition-all shadow-sm mr-2" title="CSVエクスポート">
                     <Download className="w-5 h-5" />
@@ -109,13 +110,13 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 <div className="max-w-5xl mx-auto flex flex-col gap-2">
                     {/* Header Bar */}
-                    <div className="sticky top-0 z-10 grid grid-cols-[100px_1fr] md:grid-cols-[120px_1fr_1fr] gap-x-4 px-3 py-2 bg-[#020617] border-b border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="sticky top-0 z-10 grid grid-cols-[100px_1fr] md:grid-cols-[120px_200px_1fr] gap-x-4 px-3 py-2 bg-[#020617] border-b border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                         <div>Line</div>
                         <div>Task</div>
                         <div className="col-span-2 md:col-span-1 text-right md:text-left">Time / Detail</div>
                     </div>
                     {filteredLogs.map(log => (
-                        <div key={log.id} className="grid grid-cols-[100px_1fr] md:grid-cols-[120px_1fr_1fr] gap-x-4 gap-y-1 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-700 transition-all text-xs md:text-sm">
+                        <div key={log.id} className="grid grid-cols-[100px_1fr] md:grid-cols-[120px_200px_1fr] gap-x-4 gap-y-1 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-700 transition-all text-xs md:text-sm">
                             <div className="flex items-center">
                                 <span
                                     className="px-2 py-0.5 rounded text-[10px] md:text-xs font-bold text-slate-950 mr-2 shadow-[0_0_10px_-3px_currentColor]"
@@ -131,7 +132,6 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs }) => 
                                 <span className="opacity-30">→</span>
                                 {formatDateTime(log.endedAt)}
                                 <span className="ml-3 text-blue-300 font-bold">({formatDurationVerbose(log.startedAt, log.endedAt)})</span>
-                                {log.reason && <span className="ml-2 text-amber-500 text-[10px] border border-amber-500/30 px-1.5 py-0.5 rounded bg-amber-500/10">{log.reason}</span>}
                                 {log.memo && <span className="ml-2 text-green-400 text-[10px] border border-green-500/30 px-1.5 py-0.5 rounded bg-green-500/10">📝 {log.memo}</span>}
                             </div>
                         </div>

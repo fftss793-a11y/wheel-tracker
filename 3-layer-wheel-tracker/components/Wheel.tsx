@@ -234,6 +234,7 @@ const Wheel: React.FC<WheelProps> = ({
           className="group cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onLineClick(line); }}
           onDoubleClick={(e) => { e.stopPropagation(); onLineDoubleClick(line); }}
+          onMouseEnter={() => { if (expandedTask) setExpandedTask(null); }}
         >
           {/* Segment Background */}
           <path
