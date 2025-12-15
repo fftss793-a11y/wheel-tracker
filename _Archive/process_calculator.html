@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程能力シミュレーター V15 (NV73S)</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --primary-light: #f1f5f9;
+            --accent: #2563eb;
+            --bg: #e2e8f0;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-sub: #64748b;
+            --border: #cbd5e1;
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+        }
+
+        body {
+            font-family: 'Segoe UI', Meiryo, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: #e2e8f0;
+            color: var(--text-sub);
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        input[type="number"],
+        input[type="time"],
+        select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            width: 100px;
+            text-align: right;
+        }
+
+        input[type="time"] {
+            width: 110px;
+            text-align: center;
+        }
+
+        select {
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .unit {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+            width: 40px;
+        }
+
+        .btn-clear {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-clear:hover {
+            background-color: #dc2626;
+        }
+
+        .lot-input-grid {
+            display: grid;
+            grid-template-columns: 30px 1fr 80px 1fr 30px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #f1f5f9;
+        }
+
+        .lot-input-grid.mixed-mode {
+            grid-template-columns: 30px 80px 60px 1fr 30px;
+        }
+
+        .lot-no {
+            font-weight: bold;
+            color: var(--text-sub);
+            text-align: center;
+        }
+
+        .lot-select {
+            width: 100% !important;
+            text-align: center !important;
+            padding: 6px !important;
+        }
+
+        .lot-qty {
+            width: 100% !important;
+        }
+
+        .tc-row {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff7ed;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            color: #c2410c;
+        }
+
+        .loss-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .loss-table th {
+            text-align: left;
+            padding: 8px 4px;
+            color: var(--text-sub);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .loss-table td {
+            padding: 8px 4px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .loss-name {
+            font-weight: 500;
+        }
+
+        .loss-time {
+            text-align: right;
+            color: var(--text-sub);
+        }
+
+        .loss-check {
+            width: 24px;
+            text-align: center;
+        }
+
+        .loss-input {
+            width: 60px !important;
+            padding: 4px !important;
+            font-size: 0.9rem !important;
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .breakdown-table th {
+            text-align: left;
+            padding: 8px;
+            background: #f8fafc;
+            color: var(--text-sub);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .breakdown-table td {
+            padding: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .breakdown-table tr:last-child td {
+            border-bottom: none;
+            font-weight: bold;
+            background: #f8fafc;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--primary-light);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .kpi-unit {
+            font-size: 1rem;
+            font-weight: normal;
+            color: var(--text-sub);
+        }
+
+        .main-kpi {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .main-kpi .kpi-value {
+            color: var(--accent);
+            font-size: 3rem;
+        }
+
+        .timeline-container {
+            margin-top: 20px;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+
+        .timeline-scale {
+            display: flex;
+            border-bottom: 1px solid #cbd5e1;
+            margin-bottom: 5px;
+            position: relative;
+            height: 20px;
+        }
+
+        .scale-hour {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            border-left: 1px solid #e2e8f0;
+            padding-left: 4px;
+        }
+
+        .timeline-bars {
+            position: relative;
+            height: 60px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .tl-event {
+            position: absolute;
+            height: 40px;
+            top: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .tl-event:hover {
+            z-index: 10;
+            transform: scaleY(1.2);
+            filter: brightness(1.1);
+        }
+
+        .schedule-list {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 20px;
+        }
+
+        .schedule-list th {
+            text-align: left;
+            padding: 6px;
+            background: #f1f5f9;
+            color: var(--text-sub);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .schedule-list td {
+            padding: 6px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .schedule-list tr:hover {
+            background: #f8fafc;
+        }
+
+        .bg-break {
+            background-color: #94a3b8;
+        }
+
+        .bg-setup {
+            background-color: #1e40af;
+        }
+
+        .bg-loss {
+            background-color: #a855f7;
+        }
+
+        .bg-run {
+            background-color: #22c55e;
+        }
+
+        .bg-switch {
+            background-color: #fde047;
+        }
+
+        .bg-complete {
+            background-color: #16a34a;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .spec-table {
+            width: 100%;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+
+        .spec-table td {
+            padding: 4px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .spec-table td:last-child {
+            text-align: right;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .explanation-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .explanation-title {
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        /* Print Preview Mode */
+        .print-preview-mode .sidebar {
+            display: none !important;
+        }
+
+        .print-preview-mode .container {
+            display: block;
+            max-width: 100%;
+        }
+
+        .print-preview-mode .main-content {
+            width: 100%;
+        }
+
+        .print-preview-mode .card {
+            box-shadow: none;
+            border: 1px solid #e2e8f0;
+            page-break-inside: avoid;
+        }
+
+        .print-preview-mode .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .print-preview-mode .kpi-card {
+            box-shadow: none;
+            border: 1px solid #e2e8f0;
+        }
+
+        .print-preview-bar {
+            display: none;
+            background: #1e40af;
+            color: white;
+            padding: 15px 30px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .print-preview-mode .print-preview-bar {
+            display: flex;
+        }
+
+        .print-preview-mode body {
+            padding-top: 70px;
+        }
+
+        .print-btn {
+            background: white;
+            color: #1e40af;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .print-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .preview-toggle-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .preview-toggle-btn:hover {
+            background: #059669;
+        }
+
+        @media print {
+            .print-preview-bar {
+                display: none !important;
+            }
+
+            body {
+                padding: 0 !important;
+            }
+
+            .sidebar {
+                display: none !important;
+            }
+
+            .container {
+                display: block;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Print Preview Bar -->
+    <div class="print-preview-bar" id="printPreviewBar">
+        <span style="font-size: 1.1rem;">📄 印刷プレビュー - シミュレーション結果</span>
+        <div>
+            <button class="print-btn" onclick="window.print()">🖨️ 印刷</button>
+            <button class="print-btn" onclick="togglePrintPreview()">✕ 閉じる</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <h1>工程能力シミュレーター V15</h1>
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('2E')">2E (固定)</button>
+                <button class="tab-btn" onclick="switchTab('Mixed')">他サイズ (混載)</button>
+            </div>
+
+            <div class="card" style="background: #f0f9ff; padding: 15px; margin-bottom: 15px;">
+                <div style="font-size: 0.9rem; font-weight: bold; color: #0369a1; margin-bottom: 8px;">評価モード</div>
+                <div class="tab-container">
+                    <button class="tab-btn" id="planModeBtn" onclick="switchEvalMode('plan')"
+                        style="font-size: 0.85rem;">計画モード</button>
+                    <button class="tab-btn active" id="evalModeBtn" onclick="switchEvalMode('eval')"
+                        style="font-size: 0.85rem;">実績評価</button>
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">
+                    <span id="evalModeDesc">実測最大速度で改善余地を評価</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">1. 製品・スケジュール<button class="btn-clear" onclick="clearInputs()">クリア</button>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">稼働時間</label>
+                    <div class="input-row">
+                        <input type="time" id="startTime" value="08:15" onchange="calculate()">
+                        <span style="font-size: 0.85rem; color: var(--text-sub);">～ <input type="time" id="endTimeInput"
+                                value="17:00" onchange="calculate()"> (定時)</span>
+                    </div>
+                </div>
+                <div id="tab-2E" class="tab-content active">
+                    <div class="input-group">
+                        <label class="input-label">サイズ: 2E (固定)</label>
+                        <div style="font-size: 0.85rem; color: var(--text-sub); margin-top: 4px;">85個/分, 2000個/巻</div>
+                    </div>
+                    <div id="lotInputs2E"></div>
+                </div>
+                <div id="tab-Mixed" class="tab-content">
+                    <div class="input-group">
+                        <label class="input-label">朝イチ品種切替 (立ち上げ後)</label>
+                        <div class="tc-row" style="background: #f1f5f9; color: var(--text-main);">
+                            <input type="checkbox" id="morningTC" onchange="calculate()">
+                            <span>実施する (15分)</span>
+                        </div>
+                    </div>
+                    <div id="lotInputsMixed"></div>
+                </div>
+                <div class="input-group" style="margin-top: 20px;">
+                    <div style="text-align: right; font-size: 0.9rem;">合計: <span id="totalQty"
+                            style="font-weight: bold;">0</span> 個 (<span id="totalLots">0</span> Lot)</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">2. 非稼働時間マネージャー</div>
+                <div class="input-group">
+                    <label class="input-label">総稼働時間 (自動計算)</label>
+                    <div class="input-row">
+                        <input type="number" id="totalWorkTime" value="525" readonly
+                            style="background: #f1f5f9; color: var(--text-sub);">
+                        <span class="unit">分</span>
+                    </div>
+                </div>
+                <table class="loss-table">
+                    <thead>
+                        <tr>
+                            <th>有効</th>
+                            <th>項目</th>
+                            <th style="text-align: right;">時間(分)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3"
+                                style="background: #f1f5f9; font-size: 0.8rem; font-weight: bold; padding: 4px 8px;">
+                                固定的非稼働時間</td>
+                        </tr>
+                        <tr>
+                            <td class="loss-check"><input type="checkbox" checked disabled></td>
+                            <td class="loss-name">計画休憩 (10:00, 11:45, 15:00)</td>
+                            <td class="loss-time">60</td>
+                        </tr>
+                        <tr>
+                            <td class="loss-check"><input type="checkbox" id="checkSetup" checked
+                                    onchange="calculate()"></td>
+                            <td class="loss-name">設備立ち上げ<div style="font-size: 0.75rem; color: var(--danger);">
+                                    ※稼働できる手前までの時間</div>
+                            </td>
+                            <td class="loss-time"><input type="number" id="setupTime" value="45" class="loss-input"
+                                    oninput="calculate()"></td>
+                        </tr>
+                        <tr>
+                            <td class="loss-check"><input type="checkbox" id="checkShutdown" checked
+                                    onchange="calculate()"></td>
+                            <td class="loss-name">設備立ち下げ</td>
+                            <td class="loss-time"><input type="number" id="shutdownTime" value="10" class="loss-input"
+                                    oninput="calculate()"></td>
+                        </tr>
+                        <tr>
+                            <td class="loss-check"><input type="checkbox" id="checkTopTape" onchange="calculate()"></td>
+                            <td class="loss-name">トップテープ交換</td>
+                            <td class="loss-time">15</td>
+                        </tr>
+                        <tr>
+                            <td class="loss-check"><input type="checkbox" id="checkCarrierTape" onchange="calculate()">
+                            </td>
+                            <td class="loss-name">キャリアテープ交換</td>
+                            <td class="loss-time">15</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3"
+                                style="background: #f1f5f9; font-size: 0.8rem; font-weight: bold; padding: 4px 8px;">
+                                変動的非稼働時間 (段取り)</td>
+                        </tr>
+                        <tr>
+                            <td class="loss-check"><input type="checkbox" checked disabled></td>
+                            <td class="loss-name">リール交換 (<span id="reelSwitchCount">0</span>回)<div
+                                    style="font-size: 0.75rem; color: var(--text-sub);">自動計算: 1分/回</div>
+                            </td>
+                            <td class="loss-time" id="reelSwitchTime">0</td>
+                        </tr>
+                        <tr>
+                            <td class="loss-check"><input type="checkbox" checked disabled></td>
+                            <td class="loss-name">Lot切替 (<span id="lotSwitchCount">0</span>回)<div
+                                    style="font-size: 0.75rem; color: var(--text-sub);">自動計算: <input type="number"
+                                        id="lotSwitchUnitTime" value="10" class="loss-count-input"
+                                        oninput="calculate()">分/回</div>
+                            </td>
+                            <td class="loss-time" id="lotSwitchTimeDisp">0</td>
+                        </tr>
+                        <tr class="type-change-row">
+                            <td class="loss-check"><input type="checkbox" id="checkTypeChange" onchange="calculate()">
+                            </td>
+                            <td class="loss-name">品種切替 (段替え)<div style="font-size: 0.75rem; color: var(--text-sub);">
+                                    <span id="typeChangeCount">0</span> 回 × 15分
+                                </div>
+                            </td>
+                            <td class="loss-time" id="typeChangeTimeDisp">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="result-grid">
+                <div class="kpi-card main-kpi">
+                    <div class="kpi-label">スケジュール判定</div>
+                    <div class="kpi-value" id="judgeResult">---</div>
+                    <div style="font-size: 0.9rem; color: var(--text-sub); margin-top: 5px;"><span
+                            id="judgeDetail">---</span></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">終了予定時刻</div>
+                    <div class="kpi-value" style="font-size: 2.5rem;"><span id="resultEndTime">---</span></div>
+                    <div style="font-size: 0.8rem; color: var(--text-sub);">(総所要 <span id="resultTotalTime">---</span>
+                        分)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">純製造時間</div>
+                    <div class="kpi-value"><span id="resultRunTime">---</span><span class="kpi-unit"> 分</span></div>
+                    <div style="font-size: 0.8rem; color: var(--text-sub);">(切替・段取除く)</div>
+                </div>
+            </div>
+
+            <div class="card chart-container">
+                <div class="card-header">1日のタイムライン (実績ベース)<button class="preview-toggle-btn"
+                        onclick="togglePrintPreview()">📄 印刷プレビュー</button></div>
+                <div class="timeline-container">
+                    <div class="timeline-scale" id="timelineScale"></div>
+                    <div class="timeline-bars" id="timelineBars"></div>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="dot bg-break"></div>休憩
+                    </div>
+                    <div class="legend-item">
+                        <div class="dot bg-setup"></div>立ち上げ/下げ
+                    </div>
+                    <div class="legend-item">
+                        <div class="dot bg-loss"></div>品種切替/部品
+                    </div>
+                    <div class="legend-item">
+                        <div class="dot bg-run"></div>製造(Run)
+                    </div>
+                    <div class="legend-item">
+                        <div class="dot bg-switch"></div>Lot切替
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <div style="font-weight: bold; color: var(--text-sub); margin-bottom: 5px;">スケジュール詳細</div>
+                    <table class="schedule-list">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">開始</th>
+                                <th style="width: 80px;">終了</th>
+                                <th>内容</th>
+                                <th style="text-align: right;">時間</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleListBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div>
+                    <div class="card-header">非稼働時間 内訳・割合</div>
+                    <table class="breakdown-table">
+                        <thead>
+                            <tr>
+                                <th>分類</th>
+                                <th>項目</th>
+                                <th style="text-align: right;">時間</th>
+                                <th style="text-align: right;">対稼働(%)</th>
+                                <th style="text-align: right;">対ロス(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="breakdownBody"></tbody>
+                    </table>
+                </div>
+                <div class="explanation-box">
+                    <span class="explanation-title">💡 割合の見方</span>
+                    <p style="margin-bottom: 10px;"><strong>対稼働
+                            (%)</strong><br>1日の総稼働時間（例:540分）に対して、そのロスが何％を占めているか。<br><span style="font-size: 0.8rem;">→
+                            全体の生産性への影響度を示します。</span></p>
+                    <p><strong>対ロス (%)</strong><br>発生した非稼働時間の合計に対して、その項目が何％を占めているか。<br><span
+                            style="font-size: 0.8rem;">→ 改善すべきターゲット（ボトルネック）の特定に役立ちます。</span></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">計算詳細</div>
+                <table class="spec-table" style="font-size: 1rem;">
+                    <tr>
+                        <td>モード
+                            <div style="font-size: 0.7rem; color: #64748b;">📌 現在選択中のサイズ</div>
+                        </td>
+                        <td id="detailMode">---</td>
+                    </tr>
+                    <tr>
+                        <td>総製造数
+                            <div style="font-size: 0.7rem; color: #64748b;">📦 今日作る製品の合計数</div>
+                        </td>
+                        <td id="detailTotalQty">--- 個</td>
+                    </tr>
+                    <tr>
+                        <td>非稼働時間合計
+                            <div style="font-size: 0.7rem; color: #64748b;">⚠️ 休憩・段取り・切替で失った時間</div>
+                        </td>
+                        <td id="detailLoss">--- 分</td>
+                    </tr>
+                    <tr>
+                        <td>時間当たり生産数 (PPH)
+                            <div style="font-size: 0.7rem; color: #64748b;">🕒 1時間当たりの生産個数</div>
+                        </td>
+                        <td id="detailPPH">--- 個/h</td>
+                    </tr>
+                    <tr style="background: #f0fdf4;">
+                        <td>設備能力
+                            <div style="font-size: 0.75rem; color: var(--text-sub);">📋 設備のスペック値（理論最大）</div>
+                        </td>
+                        <td id="detailSpecPPM">--- 個/分</td>
+                    </tr>
+                    <tr style="background: #eff6ff;">
+                        <td>実効PPM
+                            <div style="font-size: 0.75rem; color: var(--text-sub);">📊 実際の生産性（ロス込み）</div>
+                        </td>
+                        <td id="detailEffectivePPM">--- 個/分</td>
+                    </tr>
+                    <tr style="background: #fef3c7;">
+                        <td>設備稼働効率
+                            <div style="font-size: 0.75rem; color: var(--text-sub);">⚡ 設備能力をどれだけ活かせているか</div>
+                        </td>
+                        <td id="detailEfficiency">--- %</td>
+                    </tr>
+                    <tr>
+                        <td>可動率 (Availability)
+                            <div style="font-size: 0.7rem; color: #64748b;">⏰ 総時間のうち実際に作業できた割合</div>
+                        </td>
+                        <td id="detailAvailability">--- %</td>
+                    </tr>
+                </table>
+                <div class="explanation-box" style="margin-top: 15px;">
+                    <span class="explanation-title">💡 PPMの見方</span>
+                    <p style="margin-bottom: 8px;"><strong>設備能力</strong>: 設備に表示されている1分あたりの最大生産数です。</p>
+                    <p style="margin-bottom: 8px;"><strong>実効PPM</strong>: 休憩・段取り・切替を含めた「実際に1分で何個作れたか」です。</p>
+                    <p><strong>設備稼働効率</strong>: 実効PPM ÷ 設備能力 × 100。<br><span style="font-size: 0.8rem;">→
+                            100%に近いほど設備をフル活用できています。低い場合はロス削減の余地があります。</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 計画モード用（保守的）
+        const SPECS_PLAN = {
+            '2E': { speed: 85, step: 2000, reel: 2000 },
+            '2J': { speed: 70, step: 1000, reel: 1000 },
+            '2L': { speed: 60, step: 1000, reel: 1000 },
+            '2LH': { speed: 60, step: 1000, reel: 1000 }
+        };
+
+        // 実績評価モード用（実測最大）
+        const SPECS_EVAL = {
+            '2E': { speed: 95, step: 2000, reel: 2000 },
+            '2J': { speed: 80, step: 1000, reel: 1000 },
+            '2L': { speed: 70, step: 1000, reel: 1000 },
+            '2LH': { speed: 70, step: 1000, reel: 1000 }
+        };
+
+        const BREAKS = [
+            { start: 600, duration: 5, name: "休憩" },
+            { start: 705, duration: 45, name: "昼休憩" },
+            { start: 900, duration: 10, name: "休憩" }
+        ];
+
+        let currentMode = '2E';
+        let currentEvalMode = 'eval'; // 'plan' or 'eval'
+        let SPECS = SPECS_EVAL; // デフォルトは実績評価モード
+
+        function switchEvalMode(mode) {
+            currentEvalMode = mode;
+            SPECS = (mode === 'plan') ? SPECS_PLAN : SPECS_EVAL;
+
+            // ボタンのactive状態を切り替え
+            document.getElementById('planModeBtn').classList.toggle('active', mode === 'plan');
+            document.getElementById('evalModeBtn').classList.toggle('active', mode === 'eval');
+
+            // 説明文を更新
+            const desc = mode === 'plan'
+                ? '保守的な速度で計画を立てる'
+                : '実測最大速度で改善余地を評価';
+            document.getElementById('evalModeDesc').textContent = desc;
+
+            // 再計算
+            calculate();
+        }
+
+        function init() { initLotInputs2E(); initLotInputsMixed(); switchTab('2E'); }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const btns = document.getElementsByClassName('tab-btn');
+            for (let b of btns) {
+                if (b.textContent.includes(mode) || (mode === 'Mixed' && b.textContent.includes('他'))) b.classList.add('active');
+            }
+            document.getElementById(`tab-${mode}`).classList.add('active');
+            calculate();
+        }
+
+        function initLotInputs2E() {
+            const container = document.getElementById('lotInputs2E');
+            container.innerHTML = `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-sub); margin-bottom: 4px; padding-right: 30px;"><span style="margin-left: 10px;">No.</span><span style="margin-left: 30px;">Lot数</span><span style="margin-right: 40px;">指示数(1Lot)</span></div>`;
+            for (let i = 1; i <= 5; i++) {
+                const div = document.createElement('div');
+                div.className = 'lot-input-grid';
+                let options = '';
+                for (let j = 1; j <= 10; j++) options += `<option value="${j}">${j}</option>`;
+                div.innerHTML = `<span class="lot-no">${i}</span><div style="text-align: center; color: var(--text-sub); font-size: 0.9rem;">2E</div><select id="lotCount2E_${i}" class="lot-select" onchange="calculate()"><option value="0">-</option>${options}</select><select id="lotQty2E_${i}" class="lot-select" onchange="calculate()"><option value="0">-</option><option value="2000">2,000</option><option value="4000">4,000</option><option value="6000">6,000</option><option value="8000">8,000</option><option value="10000">10,000</option><option value="12000">12,000</option><option value="14000">14,000</option><option value="16000">16,000</option></select><span class="unit">個</span>`;
+                container.appendChild(div);
+            }
+        }
+
+        function initLotInputsMixed() {
+            const container = document.getElementById('lotInputsMixed');
+            container.innerHTML = `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-sub); margin-bottom: 4px; padding-right: 30px;"><span style="margin-left: 10px;">No.</span><span style="margin-left: 30px;">Lot数</span><span style="margin-right: 40px;">指示数(1Lot)</span></div>`;
+            for (let i = 1; i <= 5; i++) {
+                const div = document.createElement('div');
+                div.className = 'lot-input-grid';
+                let sizeOptions = '';
+                ['2J', '2L', '2LH'].forEach(s => sizeOptions += `<option value="${s}">${s}</option>`);
+                let countOptions = '';
+                for (let j = 1; j <= 10; j++) countOptions += `<option value="${j}">${j}</option>`;
+                let qtyOptions = '<option value="0">-</option>';
+                for (let q = 1000; q <= 6000; q += 1000) qtyOptions += `<option value="${q}">${q.toLocaleString()}</option>`;
+                div.innerHTML = `<span class="lot-no">${i}</span><select id="sizeMixed_${i}" class="lot-select" onchange="updateStepMixed(${i}); calculate();">${sizeOptions}</select><select id="lotCountMixed_${i}" class="lot-select" onchange="calculate()"><option value="0">-</option>${countOptions}</select><select id="lotQtyMixed_${i}" class="lot-select" onchange="calculate()">${qtyOptions}</select><span class="unit">個</span>`;
+                container.appendChild(div);
+            }
+        }
+
+        function updateStepMixed(idx) { document.getElementById(`lotQtyMixed_${idx}`).step = SPECS[document.getElementById(`sizeMixed_${idx}`).value].step; }
+
+        function clearInputs() {
+            for (let i = 1; i <= 5; i++) { document.getElementById(`lotCount2E_${i}`).value = "0"; document.getElementById(`lotQty2E_${i}`).value = "0"; }
+            document.getElementById('morningTC').checked = false;
+            for (let i = 1; i <= 5; i++) { document.getElementById(`lotCountMixed_${i}`).value = "0"; document.getElementById(`lotQtyMixed_${i}`).value = "0"; document.getElementById(`sizeMixed_${i}`).value = "2J"; }
+            calculate();
+        }
+
+        function calculate() {
+            const startTimeStr = document.getElementById('startTime').value;
+            const [sh, sm] = startTimeStr.split(':').map(Number);
+            const startTimeMin = sh * 60 + sm;
+            const totalWorkTime = parseFloat(document.getElementById('totalWorkTime').value) || 0;
+
+            let events = [];
+            let currentTime = startTimeMin;
+            let totalQty = 0, totalLots = 0, totalReelSwitchTime = 0, totalLotSwitchTime = 0, totalTypeChangeTime = 0, totalRunTime = 0, typeChangeCount = 0;
+
+            const addEvent = (type, name, duration, colorClass) => {
+                if (duration <= 0) return;
+                events.push({ type, name, duration, start: currentTime, color: colorClass });
+                currentTime += duration;
+            };
+
+            if (document.getElementById('checkSetup').checked) addEvent('Fixed', '立ち上げ', parseFloat(document.getElementById('setupTime').value) || 0, 'bg-setup');
+            if (document.getElementById('checkTopTape').checked) addEvent('Fixed', 'トップテープ交換', 15, 'bg-loss');
+            if (document.getElementById('checkCarrierTape').checked) addEvent('Fixed', 'キャリアテープ交換', 15, 'bg-loss');
+            if (currentMode === 'Mixed' && document.getElementById('morningTC').checked) { addEvent('Variable', '品種切替', 15, 'bg-loss'); totalTypeChangeTime += 15; typeChangeCount++; }
+
+            const lotSwitchUnitTime = parseFloat(document.getElementById('lotSwitchUnitTime').value) || 0;
+
+            for (let i = 1; i <= 5; i++) {
+                let count, qty, size, tcChecked;
+                if (currentMode === '2E') { count = parseInt(document.getElementById(`lotCount2E_${i}`).value) || 0; qty = parseFloat(document.getElementById(`lotQty2E_${i}`).value) || 0; size = '2E'; tcChecked = false; }
+                else { count = parseInt(document.getElementById(`lotCountMixed_${i}`).value) || 0; qty = parseFloat(document.getElementById(`lotQtyMixed_${i}`).value) || 0; size = document.getElementById(`sizeMixed_${i}`).value; tcChecked = document.getElementById(`tcMixed_${i}`).checked; }
+
+                if (count > 0 && qty > 0) {
+                    if (tcChecked) { addEvent('Variable', '品種切替', 15, 'bg-loss'); totalTypeChangeTime += 15; typeChangeCount++; }
+                    const spec = SPECS[size];
+                    for (let lotNum = 1; lotNum <= count; lotNum++) {
+                        const singleLotQty = qty;
+                        const singleLotRunTime = singleLotQty / spec.speed;
+                        const singleReelCount = Math.ceil(singleLotQty / spec.reel);
+                        const singleReelSwitches = Math.max(0, singleReelCount - 1);
+                        const singleReelTime = singleReelSwitches * 1;
+                        addEvent('Run', `製造(${size}) Lot${lotNum} - ${singleLotQty}個`, singleLotRunTime + singleReelTime, 'bg-run');
+                        addEvent('Milestone', `✓ Lot${lotNum} 完了`, 0, 'bg-complete');
+                        if (lotNum < count && lotSwitchUnitTime > 0) {
+                            addEvent('Variable', 'Lot切替', lotSwitchUnitTime, 'bg-switch');
+                            totalLotSwitchTime += lotSwitchUnitTime;
+                        }
+                        totalQty += singleLotQty;
+                        totalRunTime += singleLotRunTime;
+                        totalReelSwitchTime += singleReelTime;
+                    }
+                    totalLots += count;
+                    // Add Lot switch after this row (for transition to next row)
+                    if (lotSwitchUnitTime > 0) {
+                        addEvent('Variable', 'Lot切替', lotSwitchUnitTime, 'bg-switch');
+                        totalLotSwitchTime += lotSwitchUnitTime;
+                    }
+                }
+            }
+
+            // Remove the last unnecessary Lot switch (before shutdown)
+            if (events.length > 0 && events[events.length - 1].name === 'Lot切替') {
+                const lastEvent = events.pop();
+                currentTime -= lastEvent.duration;
+                totalLotSwitchTime -= lastEvent.duration;
+            }
+
+            if (document.getElementById('checkShutdown').checked) addEvent('Fixed', '立ち下げ', parseFloat(document.getElementById('shutdownTime').value) || 0, 'bg-setup');
+
+            let finalEvents = [];
+            let cursor = startTimeMin;
+            document.getElementById('reelSwitchCount').textContent = Math.round(totalReelSwitchTime / 2);
+            document.getElementById('reelSwitchTime').textContent = totalReelSwitchTime;
+            document.getElementById('lotSwitchCount').textContent = totalLots;
+            document.getElementById('lotSwitchTimeDisp').textContent = totalLotSwitchTime;
+            document.getElementById('typeChangeCount').textContent = typeChangeCount;
+            document.getElementById('typeChangeTimeDisp').textContent = totalTypeChangeTime;
+
+            const sortedBreaks = BREAKS.sort((a, b) => a.start - b.start);
+            events.forEach(evt => {
+                let remainingDuration = evt.duration;
+                while (remainingDuration > 0) {
+                    let nextBreak = sortedBreaks.find(b => b.start >= cursor && b.start < cursor + remainingDuration);
+                    let immediateBreak = sortedBreaks.find(b => b.start === cursor);
+                    if (immediateBreak) { finalEvents.push({ name: immediateBreak.name, duration: immediateBreak.duration, start: cursor, color: 'bg-break' }); cursor += immediateBreak.duration; continue; }
+                    if (nextBreak) { let runTime = nextBreak.start - cursor; if (runTime > 0) { finalEvents.push({ name: evt.name, duration: runTime, start: cursor, color: evt.color }); cursor += runTime; remainingDuration -= runTime; } }
+                    else { finalEvents.push({ name: evt.name, duration: remainingDuration, start: cursor, color: evt.color }); cursor += remainingDuration; remainingDuration = 0; }
+                }
+            });
+
+            const totalRequiredTime = cursor - startTimeMin;
+            const endTimeMin = cursor;
+            const endH = Math.floor(endTimeMin / 60) % 24;
+            const endM = Math.floor(endTimeMin % 60);
+            document.getElementById('resultEndTime').textContent = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+            document.getElementById('resultTotalTime').textContent = Math.ceil(totalRequiredTime);
+            document.getElementById('resultRunTime').textContent = Math.ceil(totalRunTime);
+
+            const judgeEl = document.getElementById('judgeResult');
+            const detailEl = document.getElementById('judgeDetail');
+
+            // 定時終了時刻を取得
+            const endTimeInputStr = document.getElementById('endTimeInput').value;
+            const [eh, em] = endTimeInputStr.split(':').map(Number);
+            const scheduledEndTimeMin = eh * 60 + em;
+
+            // 実際の終了時刻と定時を比較
+            const diff = scheduledEndTimeMin - endTimeMin;
+            if (diff >= 0) {
+                judgeEl.textContent = "OK";
+                judgeEl.style.color = "var(--success)";
+                detailEl.textContent = `定時内に完了 (余裕 ${Math.floor(diff)}分)`;
+            } else {
+                judgeEl.textContent = "残業";
+                judgeEl.style.color = "var(--danger)";
+                detailEl.textContent = `${Math.abs(Math.floor(diff))} 分の超過`;
+            }
+
+            document.getElementById('detailMode').textContent = currentMode === '2E' ? '2E (固定)' : '混載';
+            document.getElementById('detailTotalQty').textContent = totalQty.toLocaleString();
+            const pph = totalWorkTime > 0 ? (totalQty / (totalWorkTime / 60)) : 0;
+            document.getElementById('detailPPH').textContent = Math.round(pph).toLocaleString() + " 個/h";
+
+            // 設備能力（スペック値）
+            const specPPM = currentMode === '2E' ? SPECS['2E'].speed : 0;
+            document.getElementById('detailSpecPPM').textContent = specPPM + " 個/分";
+
+            // 実効PPM（実際の生産性）
+            const effectivePPM = totalWorkTime > 0 ? (totalQty / totalWorkTime) : 0;
+            document.getElementById('detailEffectivePPM').textContent = effectivePPM.toFixed(1) + " 個/分";
+
+            // 設備稼働効率（実効PPM ÷ 設備能力 × 100）
+            const efficiency = specPPM > 0 ? (effectivePPM / specPPM * 100) : 0;
+            document.getElementById('detailEfficiency').textContent = efficiency.toFixed(1) + " %";
+
+            const availability = totalWorkTime > 0 ? (totalRunTime / totalWorkTime * 100) : 0;
+            document.getElementById('detailAvailability').textContent = availability.toFixed(1) + " %";
+
+            let breakTimeTotal = 0;
+            finalEvents.forEach(e => { if (e.color === 'bg-break') breakTimeTotal += e.duration; });
+
+            let lossSum = 0;
+            if (document.getElementById('checkSetup').checked) lossSum += (parseFloat(document.getElementById('setupTime').value) || 0);
+            if (document.getElementById('checkShutdown').checked) lossSum += (parseFloat(document.getElementById('shutdownTime').value) || 0);
+            if (document.getElementById('checkTopTape').checked) lossSum += 15;
+            if (document.getElementById('checkCarrierTape').checked) lossSum += 15;
+            lossSum += totalTypeChangeTime + totalReelSwitchTime + totalLotSwitchTime + breakTimeTotal;
+            document.getElementById('detailLoss').textContent = Math.ceil(lossSum);
+
+            let breakdownData = {};
+            breakdownData['設備立ち上げ'] = document.getElementById('checkSetup').checked ? (parseFloat(document.getElementById('setupTime').value) || 0) : 0;
+            breakdownData['設備立ち下げ'] = document.getElementById('checkShutdown').checked ? (parseFloat(document.getElementById('shutdownTime').value) || 0) : 0;
+            breakdownData['トップテープ交換'] = document.getElementById('checkTopTape').checked ? 15 : 0;
+            breakdownData['キャリアテープ交換'] = document.getElementById('checkCarrierTape').checked ? 15 : 0;
+            breakdownData['品種切替'] = totalTypeChangeTime;
+            breakdownData['リール交換'] = totalReelSwitchTime;
+            breakdownData['Lot切替'] = totalLotSwitchTime;
+            breakdownData['休憩'] = breakTimeTotal;
+
+            let filteredBreakdown = {};
+            for (let k in breakdownData) { if (breakdownData[k] > 0) filteredBreakdown[k] = breakdownData[k]; }
+
+            drawBreakdownTable(filteredBreakdown, totalWorkTime, lossSum);
+            drawTimeline(finalEvents, startTimeMin, endTimeMin);
+            drawScheduleList(finalEvents);
+        }
+
+        function drawBreakdownTable(data, workTime, totalLoss) {
+            const tbody = document.getElementById('breakdownBody');
+            tbody.innerHTML = '';
+            for (const [name, time] of Object.entries(data)) {
+                const ratioWork = workTime > 0 ? (time / workTime * 100).toFixed(1) : '0.0';
+                const ratioLoss = totalLoss > 0 ? (time / totalLoss * 100).toFixed(1) : '0.0';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>-</td><td>${name}</td><td style="text-align: right;">${Math.round(time)} 分</td><td style="text-align: right;">${ratioWork} %</td><td style="text-align: right;">${ratioLoss} %</td>`;
+                tbody.appendChild(tr);
+            }
+            const trTotal = document.createElement('tr');
+            trTotal.innerHTML = `<td colspan="2">合計</td><td style="text-align: right;">${Math.round(totalLoss)} 分</td><td style="text-align: right;">${workTime > 0 ? (totalLoss / workTime * 100).toFixed(1) : 0} %</td><td style="text-align: right;">100.0 %</td>`;
+            tbody.appendChild(trTotal);
+        }
+
+        function drawTimeline(events, start, end) {
+            const scaleContainer = document.getElementById('timelineScale');
+            const barsContainer = document.getElementById('timelineBars');
+            scaleContainer.innerHTML = '';
+            barsContainer.innerHTML = '';
+
+            const viewStartTime = Math.floor(start / 60) * 60;
+            const duration = end - viewStartTime;
+
+            // Auto-scale: Calculate pxPerMin based on container width
+            const containerWidth = scaleContainer.parentElement.clientWidth - 20;
+            const pxPerMin = Math.max(0.5, containerWidth / duration);
+
+            barsContainer.style.width = `${containerWidth}px`;
+            scaleContainer.style.width = `${containerWidth}px`;
+
+            const startHour = Math.floor(viewStartTime / 60);
+            const endHour = Math.ceil(end / 60);
+
+            for (let h = startHour; h <= endHour; h++) {
+                const min = h * 60;
+                const pos = (min - viewStartTime) * pxPerMin;
+                const el = document.createElement('div');
+                el.className = 'scale-hour';
+                el.style.position = 'absolute';
+                el.style.left = `${pos}px`;
+                el.textContent = `${h}:00`;
+                scaleContainer.appendChild(el);
+            }
+
+            events.forEach(evt => {
+                const pos = (evt.start - viewStartTime) * pxPerMin;
+                const width = evt.duration * pxPerMin;
+                const el = document.createElement('div');
+                el.className = `tl-event ${evt.color}`;
+                el.style.left = `${pos}px`;
+                el.style.width = `${width}px`;
+                el.title = `${evt.name}: ${Math.round(evt.duration)}分`;
+                barsContainer.appendChild(el);
+            });
+        }
+
+        function drawScheduleList(events) {
+            const tbody = document.getElementById('scheduleListBody');
+            tbody.innerHTML = '';
+            events.forEach(evt => {
+                const startH = Math.floor(evt.start / 60) % 24;
+                const startM = Math.floor(evt.start % 60);
+                const endMin = evt.start + evt.duration;
+                const endH = Math.floor(endMin / 60) % 24;
+                const endM = Math.floor(endMin % 60);
+                const timeStr = (h, m) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${timeStr(startH, startM)}</td><td>${timeStr(endH, endM)}</td><td>${evt.name}</td><td style="text-align: right;">${Math.round(evt.duration)} 分</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        function togglePrintPreview() {
+            document.body.classList.toggle('print-preview-mode');
+            if (document.body.classList.contains('print-preview-mode')) {
+                window.scrollTo(0, 0);
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -30,3 +30,11 @@ description: このプロジェクトの作業ルール
 - エラーが発生した場合は原因を調査してから修正する
 - ブラウザテストが必要な場合は積極的に実行する
 
+## 単一HTMLファイルの更新
+コード変更後、以下のコマンドで `wheel-tracker-v3-standalone.html` を最新版に更新する:
+```powershell
+// turbo
+npm run build
+// turbo
+Copy-Item "dist\index.html" -Destination "wheel-tracker-v3-standalone.html" -Force
+```

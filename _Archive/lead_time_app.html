@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程能力シミュレーター</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --danger: #ef4444;
+            --success: #10b981;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 20px 0;
+            text-align: center;
+            color: var(--text-main);
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin: 0 0 12px 0;
+            color: var(--text-sub);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--text-sub);
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100px;
+            text-align: right;
+        }
+
+        input[type="text"] {
+            width: 200px;
+            text-align: left;
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: 700;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+
+        .result-box {
+            background-color: #eef2ff;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .result-label {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-sub);
+            padding: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Header & Settings -->
+        <div class="card">
+            <h1>工程能力シミュレーター</h1>
+
+            <div class="input-group">
+                <label for="processName">工程名</label>
+                <input type="text" id="processName" placeholder="例: 組立工程 A">
+            </div>
+
+            <div class="input-group">
+                <label for="workTime">1日の稼働時間 (分)</label>
+                <input type="number" id="workTime" value="460">
+            </div>
+        </div>
+
+        <!-- Main Measurement Area -->
+        <div class="card">
+            <h2>リードタイム計測 (秒)</h2>
+            <div class="timer-display" id="timer">0.00</div>
+
+            <div class="controls">
+                <button id="btnStart" class="btn-primary" onclick="toggleTimer()">スタート</button>
+                <button id="btnReset" class="btn-secondary" onclick="resetTimer()">リセット</button>
+            </div>
+
+            <button class="btn-secondary" style="width: 100%;" onclick="recordTime()">計測値を記録する</button>
+
+            <div class="result-box">
+                <div class="result-label">現在の計測値での日産能力</div>
+                <div class="result-value" id="capacityDisplay">--- <span style="font-size: 1rem;">個/日</span></div>
+            </div>
+        </div>
+
+        <!-- History & Export -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h2>計測履歴</h2>
+                <button class="btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;"
+                    onclick="exportCSV()">CSV保存</button>
+            </div>
+
+            <div class="history-list">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>計測時間 (秒)</th>
+                            <th>能力 (個/日)</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <!-- Rows will be added here -->
+                    </tbody>
+                </table>
+                <div id="emptyState" class="empty-state">履歴がありません</div>
+            </div>
+
+            <div style="margin-top: 16px; text-align: right; font-weight: bold; color: var(--text-main);">
+                平均リードタイム: <span id="avgTime">---</span> 秒 <br>
+                平均能力: <span id="avgCapacity" style="color: var(--primary); font-size: 1.2rem;">---</span> 個/日
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let startTime;
+        let elapsedTime = 0;
+        let timerInterval;
+        let isRunning = false;
+        let history = [];
+
+        const timerDisplay = document.getElementById('timer');
+        const btnStart = document.getElementById('btnStart');
+        const workTimeInput = document.getElementById('workTime');
+        const capacityDisplay = document.getElementById('capacityDisplay');
+        const historyBody = document.getElementById('historyBody');
+        const emptyState = document.getElementById('emptyState');
+        const avgTimeDisplay = document.getElementById('avgTime');
+        const avgCapacityDisplay = document.getElementById('avgCapacity');
+
+        // Timer Logic
+        function toggleTimer() {
+            if (isRunning) {
+                // Stop
+                clearInterval(timerInterval);
+                isRunning = false;
+                btnStart.textContent = "再開";
+                btnStart.classList.remove('btn-danger');
+                btnStart.classList.add('btn-primary');
+                calculateCapacity(elapsedTime / 1000);
+            } else {
+                // Start
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(updateTimer, 10);
+                isRunning = true;
+                btnStart.textContent = "ストップ";
+                btnStart.classList.remove('btn-primary');
+                btnStart.classList.add('btn-danger');
+            }
+        }
+
+        function updateTimer() {
+            const time = Date.now() - startTime;
+            elapsedTime = time;
+            timerDisplay.textContent = (time / 1000).toFixed(2);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            elapsedTime = 0;
+            timerDisplay.textContent = "0.00";
+            btnStart.textContent = "スタート";
+            btnStart.classList.remove('btn-danger');
+            btnStart.classList.add('btn-primary');
+            calculateCapacity(0);
+        }
+
+        // Calculation Logic
+        function calculateCapacity(seconds) {
+            if (seconds <= 0) {
+                capacityDisplay.innerHTML = '--- <span style="font-size: 1rem;">個/日</span>';
+                return 0;
+            }
+
+            const workMinutes = parseFloat(workTimeInput.value) || 460;
+            const workSeconds = workMinutes * 60;
+            const capacity = Math.floor(workSeconds / seconds);
+
+            capacityDisplay.innerHTML = `${capacity.toLocaleString()} <span style="font-size: 1rem;">個/日</span>`;
+            return capacity;
+        }
+
+        // Record Logic
+        function recordTime() {
+            if (elapsedTime === 0) return;
+
+            const seconds = parseFloat((elapsedTime / 1000).toFixed(2));
+            const capacity = calculateCapacity(seconds);
+
+            history.push({
+                id: Date.now(),
+                seconds: seconds,
+                capacity: capacity
+            });
+
+            renderHistory();
+            resetTimer();
+        }
+
+        function deleteRecord(id) {
+            history = history.filter(item => item.id !== id);
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyBody.innerHTML = '';
+
+            if (history.length === 0) {
+                emptyState.style.display = 'block';
+                avgTimeDisplay.textContent = '---';
+                avgCapacityDisplay.textContent = '---';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            let totalSeconds = 0;
+
+            history.forEach((item, index) => {
+                totalSeconds += item.seconds;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.seconds.toFixed(2)}</td>
+                <td>${item.capacity.toLocaleString()}</td>
+                <td><button onclick="deleteRecord(${item.id})" style="padding: 4px 8px; font-size: 0.8rem; background: #fee2e2; color: #ef4444;">削除</button></td>
+            `;
+                historyBody.appendChild(row);
+            });
+
+            // Calculate Averages
+            const avgSeconds = totalSeconds / history.length;
+            const workMinutes = parseFloat(workTimeInput.value) || 460;
+            const workSeconds = workMinutes * 60;
+            const avgCapacity = Math.floor(workSeconds / avgSeconds);
+
+            avgTimeDisplay.textContent = avgSeconds.toFixed(2);
+            avgCapacityDisplay.textContent = avgCapacity.toLocaleString();
+        }
+
+        // CSV Export
+        function exportCSV() {
+            if (history.length === 0) {
+                alert("データがありません");
+                return;
+            }
+
+            const processName = document.getElementById('processName').value || "工程";
+            const workTime = document.getElementById('workTime').value;
+            const date = new Date().toLocaleDateString().replace(/\//g, '-');
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += `工程名,${processName}\n`;
+            csvContent += `稼働時間(分),${workTime}\n`;
+            csvContent += `No,リードタイム(秒),日産能力(個)\n`;
+
+            history.forEach((item, index) => {
+                csvContent += `${index + 1},${item.seconds},${item.capacity}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${processName}_${date}_能力計測.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+
+</body>
+
+</html>

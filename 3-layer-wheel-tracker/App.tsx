@@ -541,9 +541,12 @@ function App() {
         onClose={() => setIsMemoOpen(false)}
         memo={currentMemo}
         onSave={(memo) => {
-          // If memo changes, split the log: Stop current -> Start new with new memo
+          setCurrentMemo(memo);
           if (activeSessions[currentLine]) {
-            startTracking(currentLine, activeSessions[currentLine]!.task, memo);
+            setActiveSessions(prev => ({
+              ...prev,
+              [currentLine]: { ...prev[currentLine]!, memo }
+            }));
           }
         }}
       />
