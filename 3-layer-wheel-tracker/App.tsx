@@ -12,7 +12,7 @@ import { uuid, formatDuration } from './utils';
 import Wheel from './components/Wheel';
 import { PromptModal, LogModal, LineSettingsModal, GlobalSettingsModal, MemoModal, HelpModal, TemplateModal } from './components/Modals';
 
-const STORAGE_KEY_CONFIG = 'wheel_config_factory_v5';
+const STORAGE_KEY_CONFIG = 'wheel_config_factory_v6';
 const STORAGE_KEY_LOGS_PREFIX = 'timelogs_v2_';
 
 function App() {
@@ -486,6 +486,17 @@ function App() {
               [currentLine]: { ...prev[currentLine]!, memo }
             }));
           }
+        }}
+        lineName={config.lines[currentLine].name}
+        presets={config.lines[currentLine].memoPresets || []}
+        onPresetsChange={(newPresets) => {
+          setConfig(prev => ({
+            ...prev,
+            lines: {
+              ...prev.lines,
+              [currentLine]: { ...prev.lines[currentLine], memoPresets: newPresets }
+            }
+          }));
         }}
       />
       <HelpModal

@@ -10,6 +10,7 @@ export type Category = string | CategoryItem;
 export interface LineConfig {
   name: string;
   categories: Category[];
+  memoPresets?: string[];  // Line-specific memo presets
 }
 
 export type CenterIdleAction = 'none' | 'resume' | 'openLineRing' | 'startDefault';

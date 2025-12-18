@@ -524,34 +524,101 @@ interface MemoModalProps {
     onClose: () => void;
     memo: string;
     onSave: (memo: string) => void;
+    lineName?: string;
+    presets?: string[];
+    onPresetsChange?: (newPresets: string[]) => void;
 }
 
-export const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo, onSave }) => {
+export const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo, onSave, lineName, presets = [], onPresetsChange }) => {
     const [localMemo, setLocalMemo] = useState(memo);
+    const [isAddingPreset, setIsAddingPreset] = useState(false);
+    const [newPresetText, setNewPresetText] = useState('');
 
     useEffect(() => {
-        if (isOpen) setLocalMemo(memo);
+        if (isOpen) {
+            setLocalMemo(memo);
+            setIsAddingPreset(false);
+            setNewPresetText('');
+        }
     }, [isOpen, memo]);
+
+    const handlePresetClick = (preset: string) => {
+        setLocalMemo(prev => prev ? `${prev}, ${preset}` : preset);
+    };
+
+    const handleAddPreset = () => {
+        if (newPresetText.trim() && onPresetsChange) {
+            onPresetsChange([...presets, newPresetText.trim()]);
+            setNewPresetText('');
+            setIsAddingPreset(false);
+        }
+    };
+
+    const handleDeletePreset = (index: number) => {
+        if (onPresetsChange && confirm('このプリセットを削除しますか？')) {
+            onPresetsChange(presets.filter((_, i) => i !== index));
+        }
+    };
 
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1300] backdrop-blur-sm animate-in zoom-in-95 duration-200" onClick={onClose}>
-            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-[90vw] max-w-[400px]" onClick={e => e.stopPropagation()}>
+            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-[90vw] max-w-[450px]" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        📝 メモ入力
+                        📝 メモ入力 {lineName && <span className="text-sm text-slate-400">({lineName})</span>}
                     </h2>
                     <button onClick={onClose}><X className="text-slate-500 hover:text-white transition-colors" /></button>
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 space-y-4">
+                    {/* Presets Section */}
+                    {onPresetsChange && (
+                        <div className="flex flex-wrap gap-2">
+                            {presets.map((preset, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handlePresetClick(preset)}
+                                    onContextMenu={(e) => { e.preventDefault(); handleDeletePreset(i); }}
+                                    className="px-3 py-1.5 bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded-lg text-sm font-medium hover:bg-blue-600/30 hover:border-blue-500/50 transition-all"
+                                    title="クリックで追加、右クリックで削除"
+                                >
+                                    {preset}
+                                </button>
+                            ))}
+                            {isAddingPreset ? (
+                                <div className="flex items-center gap-1">
+                                    <input
+                                        type="text"
+                                        value={newPresetText}
+                                        onChange={e => setNewPresetText(e.target.value)}
+                                        onKeyDown={e => { if (e.key === 'Enter') handleAddPreset(); if (e.key === 'Escape') setIsAddingPreset(false); }}
+                                        placeholder="新規プリセット"
+                                        className="px-2 py-1 bg-slate-800 border border-slate-600 rounded text-sm text-white w-28 focus:outline-none focus:border-green-500"
+                                        autoFocus
+                                    />
+                                    <button onClick={handleAddPreset} className="text-green-400 hover:text-green-300 px-1">✓</button>
+                                    <button onClick={() => setIsAddingPreset(false)} className="text-red-400 hover:text-red-300 px-1">✕</button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setIsAddingPreset(true)}
+                                    className="px-3 py-1.5 bg-slate-800 text-slate-400 border border-dashed border-slate-600 rounded-lg text-sm hover:text-slate-200 hover:border-slate-500 transition-all flex items-center gap-1"
+                                >
+                                    <Plus size={14} /> 追加
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Text Input */}
                     <textarea
                         value={localMemo}
                         onChange={e => setLocalMemo(e.target.value)}
                         placeholder="メモを入力..."
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 h-[120px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
-                        autoFocus
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 h-[100px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+                        autoFocus={!onPresetsChange}
                     />
                 </div>
 
