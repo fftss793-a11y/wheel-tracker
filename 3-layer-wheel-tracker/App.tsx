@@ -12,7 +12,7 @@ import { uuid, formatDuration } from './utils';
 import Wheel from './components/Wheel';
 import { PromptModal, LogModal, LineSettingsModal, GlobalSettingsModal, MemoModal, HelpModal, TemplateModal } from './components/Modals';
 
-const STORAGE_KEY_CONFIG = 'wheel_config_factory_v4';
+const STORAGE_KEY_CONFIG = 'wheel_config_factory_v5';
 const STORAGE_KEY_LOGS_PREFIX = 'timelogs_v2_';
 
 function App() {
@@ -46,7 +46,7 @@ function App() {
   // Refs
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInteractionRef = useRef<number>(Date.now());
-  const maxSessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const idlePromptShownRef = useRef(false);
 
   // --- Initialization & Effects ---
@@ -106,73 +106,8 @@ function App() {
     events.forEach(ev => window.addEventListener(ev, touch as any, { passive: true }));
     return () => events.forEach(ev => window.removeEventListener(ev, touch as any));
   }, [touch]);
-  // Track which break alerts have been shown today
-  const breakAlertsShownRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    const checkBreakTime = setInterval(() => {
-      const now = new Date();
-      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const today = now.toDateString();
-
-      // Reset shown alerts if it's a new day
-      if (breakAlertsShownRef.current.size > 0) {
-        const firstKey = Array.from(breakAlertsShownRef.current)[0] as string;
-        if (firstKey && !firstKey.startsWith(today)) {
-          breakAlertsShownRef.current.clear();
-        }
-      }
-
-      const breakAlerts = config.breakAlerts || ['10:00', '11:45', '15:00'];
-
-      for (const breakTime of breakAlerts) {
-        const alertKey = `${today}_${breakTime}`;
-        if (currentTime === breakTime && !breakAlertsShownRef.current.has(alertKey) && !promptState.isOpen) {
-          breakAlertsShownRef.current.add(alertKey);
-          setPromptState({
-            isOpen: true,
-            message: `${breakTime} です。休憩時間になりました。休憩にしますか？`,
-            onConfirm: () => {
-              if (activeSessions[currentLine]) {
-                stopTracking(currentLine, '定時休憩');
-              }
-              startTracking(currentLine, '休憩');
-              setPromptState(prev => ({ ...prev, isOpen: false }));
-            },
-            onCancel: () => {
-              setPromptState(prev => ({ ...prev, isOpen: false }));
-            }
-          });
-          break;
-        }
-      }
-    }, 30000); // Check every 30 seconds
-    return () => clearInterval(checkBreakTime);
-  }, [config.breakAlerts, activeSessions, currentLine, promptState.isOpen]);
 
   // --- Logic: Tracking Control ---
-  const resetMaxTimer = useCallback((line: LineId) => {
-    if (maxSessionTimerRef.current) clearTimeout(maxSessionTimerRef.current);
-    if (line !== currentLine) return;
-
-    if (config.maxSessionMin > 0) {
-      maxSessionTimerRef.current = setTimeout(() => {
-        if (config.maxSessionAction === 'stop') {
-          stopTracking(line, '上限時間により自動終了');
-        } else {
-          setPromptState({
-            isOpen: true,
-            message: '計測が上限時間に達しました。終了しますか？',
-            onConfirm: () => {
-              stopTracking(line, '上限時間により終了');
-              setPromptState(prev => ({ ...prev, isOpen: false }));
-            },
-            onCancel: () => setPromptState(prev => ({ ...prev, isOpen: false }))
-          });
-        }
-      }, config.maxSessionMin * 60000);
-    }
-  }, [config.maxSessionMin, config.maxSessionAction, currentLine]);
 
   const startTracking = (line: LineId, task: string, initialMemo: string = '') => {
     touch();
@@ -192,7 +127,7 @@ function App() {
     }
     setActiveSessions(prev => ({ ...prev, [line]: { task, startedAt: Date.now(), memo: initialMemo } }));
     setCurrentMemo(initialMemo);
-    resetMaxTimer(line);
+
   };
 
   const stopTracking = (line: LineId, reason?: string) => {
@@ -213,7 +148,7 @@ function App() {
     saveLog(line, log);
     setActiveSessions(prev => ({ ...prev, [line]: null }));
     showUndo({ type: 'stop', line, log });
-    if (maxSessionTimerRef.current) clearTimeout(maxSessionTimerRef.current);
+
   };
 
   const showUndo = (info: UndoInfo) => {
@@ -229,7 +164,7 @@ function App() {
     setActiveSessions(prev => ({ ...prev, [line]: { task: log.task, startedAt: log.startedAt } }));
     setUndoInfo(null);
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-    resetMaxTimer(line);
+
   };
 
 

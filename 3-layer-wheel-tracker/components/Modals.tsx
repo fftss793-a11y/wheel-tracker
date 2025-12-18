@@ -147,19 +147,15 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
                                 </span>
                                 <span className="truncate opacity-80 font-mono text-xs">{log.lineName}</span>
                             </div>
-                            <div className="font-bold text-white tracking-wide">{log.task}</div>
-                            <div className="col-span-2 md:col-span-1 text-slate-400 font-mono text-xs flex items-center gap-2 justify-end flex-wrap">
-                                {formatDateTime(log.startedAt)}
-                                <span className="opacity-30">→</span>
-                                {formatDateTime(log.endedAt)}
-                                <span className="ml-3 text-blue-300 font-bold">({formatDurationVerbose(log.startedAt, log.endedAt)})</span>
+                            <div className="font-bold text-white tracking-wide flex items-center gap-2">
+                                {log.task}
                                 {editingLogId === log.id ? (
-                                    <div className="flex items-center gap-1 ml-2">
+                                    <div className="flex items-center gap-1">
                                         <input
                                             type="text"
                                             value={editMemo}
                                             onChange={e => setEditMemo(e.target.value)}
-                                            className="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-32 focus:outline-none focus:border-blue-500"
+                                            className="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-32 focus:outline-none focus:border-blue-500 font-normal"
                                             autoFocus
                                             onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(log); if (e.key === 'Escape') handleCancelEdit(); }}
                                         />
@@ -169,11 +165,17 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
                                 ) : (
                                     <button
                                         onClick={() => handleStartEdit(log)}
-                                        className={`ml-2 text-[10px] border px-1.5 py-0.5 rounded transition-colors ${log.memo ? 'text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20' : 'text-slate-500 border-slate-600 hover:text-slate-300 hover:border-slate-500'}`}
+                                        className={`text-[10px] border px-1.5 py-0.5 rounded transition-colors font-normal ${log.memo ? 'text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20' : 'text-slate-500 border-slate-600 hover:text-slate-300 hover:border-slate-500'}`}
                                     >
-                                        📝 {log.memo || 'メモ追加'}
+                                        📝 {log.memo || 'メモ'}
                                     </button>
                                 )}
+                            </div>
+                            <div className="col-span-2 md:col-span-1 text-slate-400 font-mono text-xs flex items-center gap-2 justify-end flex-wrap">
+                                {formatDateTime(log.startedAt)}
+                                <span className="opacity-30">→</span>
+                                {formatDateTime(log.endedAt)}
+                                <span className="ml-3 text-blue-300 font-bold">({formatDurationVerbose(log.startedAt, log.endedAt)})</span>
                             </div>
                         </div>
                     ))}
@@ -398,48 +400,10 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar flex flex-col gap-6">
-                    {/* Automation Rules */}
+                    {/* UI Settings */}
                     <section>
-                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">自動化ルール (タイマー)</h3>
+                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">UI設定</h3>
                         <div className="grid gap-4">
-                            <div className="flex flex-col gap-2">
-                                <span className="text-slate-300 text-sm font-medium">休憩時間の案内 (時刻)</span>
-                                <div className="flex gap-2">
-                                    {(localConfig.breakAlerts || ['10:00', '11:45', '15:00']).map((val, i) => (
-                                        <input
-                                            key={i}
-                                            type="time"
-                                            value={val}
-                                            onChange={e => {
-                                                const newAlerts = [...(localConfig.breakAlerts || ['10:00', '11:45', '15:00'])];
-                                                newAlerts[i] = e.target.value;
-                                                setLocalConfig({ ...localConfig, breakAlerts: newAlerts });
-                                            }}
-                                            className="bg-slate-800 border border-slate-700 rounded p-2 text-center text-white focus:outline-none focus:border-blue-500"
-                                        />
-                                    ))}
-                                </div>
-                                <span className="text-slate-500 text-[10px]">指定時刻になると休憩を提案します</span>
-                            </div>
-                            <label className="flex items-center justify-between group">
-                                <span className="text-slate-300 text-sm font-medium group-hover:text-white transition-colors">最大連続時間の上限 (分)</span>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="number" min="10" max="720"
-                                        value={localConfig.maxSessionMin}
-                                        onChange={e => setLocalConfig({ ...localConfig, maxSessionMin: Number(e.target.value) })}
-                                        className="w-20 bg-slate-800 border border-slate-700 rounded p-2 text-right text-white focus:outline-none focus:border-blue-500"
-                                    />
-                                    <select
-                                        value={localConfig.maxSessionAction}
-                                        onChange={e => setLocalConfig({ ...localConfig, maxSessionAction: e.target.value as any })}
-                                        className="bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-blue-500"
-                                    >
-                                        <option value="stop">自動終了</option>
-                                        <option value="prompt">確認</option>
-                                    </select>
-                                </div>
-                            </label>
                             <label className="flex items-center justify-between group">
                                 <span className="text-slate-300 text-sm font-medium group-hover:text-white transition-colors">中央ボタン(Idle時)の動作</span>
                                 <div className="flex gap-2 items-center">
@@ -632,9 +596,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                         </h3>
                         <ul className="space-y-2 ml-4">
                             <li><span className="text-white font-bold">ホイール内側</span>: タスクをクリックして計測開始</li>
-                            <li><span className="text-white font-bold">ホイール外側</span>: ライン(A〜E)をクリックして切り替え</li>
+                            <li><span className="text-white font-bold">ホイール外側</span>: ライン(A〜F)をクリックして切り替え</li>
                             <li><span className="text-white font-bold">中央ボタン</span>: 計測中はクリックで停止</li>
-                            <li><span className="text-white font-bold">ダブルクリック</span>: ライン部分をダブルクリックで「立ち下げ」開始</li>
+                            <li><span className="text-white font-bold">右クリック</span>: 計測中にタスクを右クリックでメモ入力</li>
                             <li><span className="text-white font-bold">サブカテゴリ</span>: タスクにサブカテゴリがある場合、ホバーで展開</li>
                         </ul>
                     </section>
@@ -648,7 +612,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             <li><span className="text-white font-bold">🚪 終業</span>: タスク停止 → CSV保存 → ログクリア</li>
                             <li><span className="text-white font-bold">📁 テンプレート</span>: 設定を保存・読み込み</li>
                             <li><span className="text-white font-bold">📄 ログ</span>: 作業履歴を確認・メモ編集・CSVエクスポート</li>
-                            <li><span className="text-white font-bold">🎛️ 全体設定</span>: タイマー・UI・テーマの設定</li>
+                            <li><span className="text-white font-bold">🎛️ 全体設定</span>: UI・テーマの設定</li>
                             <li><span className="text-white font-bold">❓ ヘルプ</span>: この画面</li>
                         </ul>
                         <p className="mt-2 text-slate-500 text-xs">※ ホイールのライン部分をクリックするとライン名・タスク項目を編集できます</p>
@@ -672,8 +636,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             🎛️ 全体設定の項目
                         </h3>
                         <ul className="space-y-2 ml-4">
-                            <li><span className="text-white font-bold">休憩時間の案内</span>: 指定時刻に休憩を提案</li>
-                            <li><span className="text-white font-bold">最大連続時間</span>: 上限時間で自動終了または確認</li>
+                            <li><span className="text-white font-bold">中央ボタンの動作</span>: アイドル時のクリック動作を設定</li>
                             <li><span className="text-white font-bold">UIサイズ</span>: ホイールの拡大・縮小</li>
                             <li><span className="text-white font-bold">ホイール位置</span>: 上下位置の調整</li>
                             <li><span className="text-white font-bold">背景テーマ</span>: ダーク/ライト切り替え</li>
@@ -686,7 +649,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             ⌨️ キーボードショートカット
                         </h3>
                         <ul className="space-y-2 ml-4">
-                            <li><span className="text-white font-bold">1〜5</span>: ラインA〜Eに切り替え</li>
+                            <li><span className="text-white font-bold">1〜6</span>: ラインA〜Fに切り替え</li>
                             <li><span className="text-white font-bold">Space</span>: 計測停止</li>
                             <li><span className="text-white font-bold">Esc</span>: モーダルを閉じる / 設定モード終了</li>
                         </ul>

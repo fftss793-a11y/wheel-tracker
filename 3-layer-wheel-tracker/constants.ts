@@ -89,9 +89,6 @@ export const DEFAULT_CONFIG: AppConfig = {
       ]
     },
   },
-  breakAlerts: ['10:00', '11:45', '15:00'],  // Fixed break time alerts
-  maxSessionMin: 540,
-  maxSessionAction: 'stop',
   centerIdleAction: 'resume',
   quickResumeMin: 10,
   uiScale: 1.0,
