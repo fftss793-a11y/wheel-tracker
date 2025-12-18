@@ -39,37 +39,37 @@ export const DEFAULT_CONFIG: AppConfig = {
     A: {
       name: 'LINE A',
       categories: [
-        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
-        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        "生産",
+        { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
+        { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
     B: {
       name: 'LINE B',
       categories: [
-        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
-        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        "生産",
+        { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
+        { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
     C: {
       name: 'LINE C',
       categories: [
-        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
-        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        "生産",
+        { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
+        { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
     D: {
       name: 'LINE D',
       categories: [
-        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
-        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        "生産",
+        { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
+        { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
     E: {
@@ -82,10 +82,10 @@ export const DEFAULT_CONFIG: AppConfig = {
     F: {
       name: 'LINE F',
       categories: [
-        { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
-        { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
+        "生産",
+        { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
+        { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
   },

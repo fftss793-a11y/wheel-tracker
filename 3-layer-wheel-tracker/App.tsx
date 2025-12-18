@@ -12,7 +12,7 @@ import { uuid, formatDuration } from './utils';
 import Wheel from './components/Wheel';
 import { PromptModal, LogModal, LineSettingsModal, GlobalSettingsModal, MemoModal, HelpModal, TemplateModal } from './components/Modals';
 
-const STORAGE_KEY_CONFIG = 'wheel_config_factory_v3';
+const STORAGE_KEY_CONFIG = 'wheel_config_factory_v4';
 const STORAGE_KEY_LOGS_PREFIX = 'timelogs_v2_';
 
 function App() {
@@ -474,6 +474,7 @@ function App() {
             onLineClick={handleWheelLineClick}
             onLineDoubleClick={handleWheelLineDoubleClick}
             onCenterClick={handleCenterClick}
+            onMemoOpen={() => setIsMemoOpen(true)}
             hudData={{
               lineName: config.lines[currentLine].name,
               timeString: currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00",

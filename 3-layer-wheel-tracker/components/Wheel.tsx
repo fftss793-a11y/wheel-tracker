@@ -20,6 +20,7 @@ interface WheelProps {
   onLineClick: (line: LineId) => void;
   onLineDoubleClick: (line: LineId) => void;
   onCenterClick: () => void;
+  onMemoOpen?: () => void;
   hudData?: {
     lineName: string;
     timeString: string;
@@ -44,6 +45,7 @@ const Wheel: React.FC<WheelProps> = ({
   onLineClick,
   onLineDoubleClick,
   onCenterClick,
+  onMemoOpen,
 }) => {
   const [expandedTask, setExpandedTask] = useState<string | null>(null);
 
@@ -129,6 +131,12 @@ const Wheel: React.FC<WheelProps> = ({
           className={`group ${isEditMode ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}
           onClick={() => handleTaskClick(cat)}
           onMouseEnter={() => handleTaskHover(cat)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            if (isTracking && !isEditMode && onMemoOpen) {
+              onMemoOpen();
+            }
+          }}
         >
           {/* Base Segment */}
           <path
