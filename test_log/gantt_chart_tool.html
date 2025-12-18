@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wheel Tracker Log Visualizer (Drag & Drop)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+        }
+
+        /* Drop Zone */
+        #drop-zone {
+            border: 2px dashed #475569;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #1e293b;
+            color: #94a3b8;
+            margin-bottom: 30px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        #drop-zone.dragover {
+            border-color: #3b82f6;
+            background: #1e293b80;
+            color: #3b82f6;
+        }
+
+        #drop-zone:hover {
+            border-color: #64748b;
+            color: #cbd5e1;
+        }
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Chart Styles (Same as before) */
+        .chart-container {
+            position: relative;
+            overflow-x: auto;
+            border: 1px solid #334155;
+            background: #1e293b;
+            border-radius: 8px;
+            padding-bottom: 20px;
+            display: none;
+        }
+
+        .chart-container.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .timeline-header {
+            display: flex;
+            height: 30px;
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            left: 0;
+            min-width: 1200px;
+        }
+
+        .time-label {
+            flex: 1;
+            text-align: left;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            padding-left: 2px;
+            border-left: 1px solid #334155;
+            position: relative;
+        }
+
+        .line-row {
+            display: flex;
+            height: 60px;
+            border-bottom: 1px solid #334155;
+            position: relative;
+            min-width: 1200px;
+            border-top: 1px solid #334155;
+        }
+
+        .line-label {
+            position: sticky;
+            left: 0;
+            width: 80px;
+            background: #1e293b;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-right: 1px solid #334155;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            line-height: 1.2;
+        }
+
+        .line-track {
+            flex: 1;
+            position: relative;
+        }
+
+        .task-bar {
+            position: absolute;
+            top: 10px;
+            bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-size: 0.7rem;
+            color: white;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, z-index 0.1s;
+            cursor: pointer;
+        }
+
+        .task-bar:hover {
+            transform: scaleY(1.1);
+            z-index: 5;
+        }
+
+        .task-bar-content {
+            padding: 0 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+            border: 1px solid #475569;
+            max-width: 300px;
+        }
+
+        /* Colors (Signal Tower Scheme) */
+        .color-production {
+            background: #22c55e;
+        }
+
+        /* Green: 稼働 */
+        .color-setup {
+            background: #3b82f6;
+        }
+
+        /* Blue: 作業中 */
+        .color-trouble {
+            background: #ef4444;
+        }
+
+        /* Red: 異常 */
+        .color-stop {
+            background: #eab308;
+            color: black;
+        }
+
+        /* Yellow: 待機 (文字色黒で見やすく) */
+        .color-break {
+            background: #94a3b8;
+        }
+
+        /* Gray: 休憩 */
+        .color-other {
+            background: #a855f7;
+        }
+
+        /* Purple: その他 */
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            display: none;
+        }
+
+        .legend.active {
+            display: flex;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+
+        .legend-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .time-marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Wheel Tracker Log Visualizer</h1>
+
+        <div id="drop-zone">
+            <span class="icon">📂</span>
+            <p>ここにCSVファイルをドラッグ＆ドロップ<br>またはクリックして選択</p>
+            <input type="file" id="file-input" accept=".csv" style="display: none;">
+        </div>
+
+        <div id="legend" class="legend">
+            <div class="legend-item">
+                <div class="legend-box color-production"></div>生産
+            </div>
+            <div class="legend-item">
+                <div class="legend-box color-setup"></div>段取り (切替/始業点検)
+            </div>
+            <div class="legend-item">
+                <div class="legend-box color-trouble"></div>トラブル
+            </div>
+            <div class="legend-item">
+                <div class="legend-box color-stop"></div>停止 (一時停止/計画停止)
+            </div>
+            <div class="legend-item">
+                <div class="legend-box color-break"></div>休憩
+            </div>
+        </div>
+
+        <div id="chart-container" class="chart-container">
+            <div id="chart-mount"></div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const chartContainer = document.getElementById('chart-container');
+        const legend = document.getElementById('legend');
+
+        // Drag & Drop Handlers
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                alert('CSVファイルを選択してください');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                renderChart(e.target.result);
+                document.querySelector('h1').innerText = `生産ログ: ${file.name}`;
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            const data = [];
+
+            const splitCSVLine = (line) => {
+                const res = [];
+                let inQuote = false;
+                let p = 0;
+                for (let i = 0; i < line.length; i++) {
+                    if (line[i] === '"') inQuote = !inQuote;
+                    if (line[i] === ',' && !inQuote) {
+                        res.push(line.substring(p, i).replace(/^"|"$/g, '').replace(/""/g, '"'));
+                        p = i + 1;
+                    }
+                }
+                res.push(line.substring(p).replace(/^"|"$/g, '').replace(/""/g, '"'));
+                return res;
+            };
+
+            if (lines.length < 2) return data;
+
+            // Parse Header
+            const headers = splitCSVLine(lines[0]);
+            const map = {
+                id: -1,
+                name: -1,
+                task: -1,
+                start: -1,
+                end: -1,
+                duration: -1,
+                memo: -1
+            };
+
+            headers.forEach((h, i) => {
+                const header = h.trim();
+                if (header === 'ID' || header === 'id') map.id = i;
+                if (header === 'ライン名' || header === 'name' || header === 'Name') map.name = i;
+                if (header === 'タスク' || header === 'task' || header === 'Task') map.task = i;
+                if (header === '開始日時' || header === 'start' || header === 'Start') map.start = i;
+                if (header === '終了日時' || header === 'end' || header === 'End') map.end = i;
+                if (header.includes('所要時間') || header === 'duration') map.duration = i;
+                if (header === 'メモ' || header === 'memo') map.memo = i;
+            });
+
+            // Fallback for ID if not found: use Name
+            if (map.id === -1 && map.name !== -1) {
+                map.id = map.name;
+            }
+
+            // Validation: Ensure minimum required columns exist
+            if (map.start === -1 || map.end === -1) {
+                console.warn("Required columns (Start/End) not found in header.");
+                // Fallback to old indices if headers completely fail to match (backward compatibility attempt)
+                // Old format assumption: 0:id, 1:name, 2:task, 3:start, 4:end, 5:duration
+                if (map.start === -1) {
+                    map.id = 0;
+                    map.name = 1;
+                    map.task = 2;
+                    map.start = 3;
+                    map.end = 4;
+                    map.duration = 5;
+                    map.memo = 6;
+                }
+            }
+
+            for (let i = 1; i < lines.length; i++) {
+                const row = splitCSVLine(lines[i]);
+                if (row.length < 3) continue; // Skip empty rows
+
+                const getValue = (index) => index !== -1 && index < row.length ? row[index] : "";
+
+                const startStr = getValue(map.start);
+                const endStr = getValue(map.end);
+                
+                if (!startStr || !endStr) continue;
+
+                const start = new Date(startStr);
+                const end = new Date(endStr);
+
+                if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
+
+                data.push({
+                    id: getValue(map.id) || "Unknown",
+                    name: getValue(map.name) || getValue(map.id) || "Unknown",
+                    task: getValue(map.task) || "Task",
+                    start: start,
+                    end: end,
+                    duration: parseInt(getValue(map.duration)) || 0,
+                    memo: getValue(map.memo) || ""
+                });
+            }
+            return data;
+        }
+
+        function getTaskClass(taskName) {
+            if (!taskName) return "color-other";
+            if (taskName.includes("生産")) return "color-production";
+            if (taskName.includes("段取り") || taskName.includes("切替") || taskName.includes("始業点検")) return "color-setup";
+            if (taskName.includes("トラブル") || taskName.includes("異常")) return "color-trouble";
+            if (taskName.includes("停止") || taskName.includes("一時停止") || taskName.includes("待機")) return "color-stop";
+            if (taskName.includes("休憩")) return "color-break";
+            return "color-other";
+        }
+
+        function renderChart(csvData) {
+            const logs = parseCSV(csvData);
+            if (logs.length === 0) {
+                alert('有効なログデータが見つかりませんでした');
+                return;
+            }
+
+            // --- Config ---
+            const startBound = new Date(logs[0].start);
+            startBound.setMinutes(0, 0, 0);
+
+            const endBound = new Date(logs[logs.length - 1].end);
+            endBound.setMinutes(0, 0, 0);
+            endBound.setHours(endBound.getHours() + 1);
+
+            const totalDuration = endBound - startBound;
+            const getPosition = (date) => ((date - startBound) / totalDuration) * 100;
+
+            // --- Clear Previous ---
+            const mount = document.getElementById('chart-mount');
+            mount.innerHTML = '';
+            chartContainer.classList.add('active');
+            legend.classList.add('active');
+
+            // --- Render Header ---
+            const header = document.createElement('div');
+            header.className = 'timeline-header';
+            const hourSpan = 1000 * 60 * 60;
+            for (let t = startBound.getTime(); t < endBound.getTime(); t += hourSpan) {
+                const d = new Date(t);
+                const div = document.createElement('div');
+                div.className = 'time-label';
+                div.innerText = `${d.getHours()}:00`;
+                header.appendChild(div);
+            }
+            mount.appendChild(header);
+
+            // --- Render Rows ---
+            const lines = [...new Set(logs.map(l => l.id))].sort();
+
+            lines.forEach(lineId => {
+                const lineLogs = logs.filter(l => l.id === lineId);
+                const lineName = lineLogs.length > 0 && lineLogs[0].name ? lineLogs[0].name : `LINE ${lineId}`;
+                const row = document.createElement('div');
+                row.className = 'line-row';
+
+                const label = document.createElement('div');
+                label.className = 'line-label';
+                label.innerText = lineName;
+                row.appendChild(label);
+
+                const track = document.createElement('div');
+                track.className = 'line-track';
+
+                // Hour Markers
+                for (let t = startBound.getTime(); t < endBound.getTime(); t += hourSpan) {
+                    const marker = document.createElement('div');
+                    marker.className = 'time-marker';
+                    marker.style.left = `${((t - startBound) / totalDuration) * 100}%`;
+                    track.appendChild(marker);
+                }
+
+                lineLogs.forEach(log => {
+                    const left = getPosition(log.start);
+                    const width = getPosition(log.end) - left;
+                    if (width < 0.05) return;
+
+                    const bar = document.createElement('div');
+                    bar.className = `task-bar ${getTaskClass(log.task)}`;
+                    bar.style.left = `${left}%`;
+                    bar.style.width = `${width}%`;
+
+                    const content = document.createElement('div');
+                    content.className = 'task-bar-content';
+                    content.innerText = log.task.split('>').pop().trim();
+                    bar.appendChild(content);
+
+                    // Tooltip
+                    bar.addEventListener('mousemove', (e) => {
+                        const tt = document.getElementById('tooltip');
+                        tt.style.opacity = 1;
+                        tt.style.left = `${e.clientX + 10}px`;
+                        tt.style.top = `${e.clientY + 10}px`;
+                        tt.innerHTML = `
+                        <strong>${log.task}</strong><br>
+                        ${log.start.toLocaleTimeString()} - ${log.end.toLocaleTimeString()}<br>
+                        所要時間: ${Math.round(log.duration / 60)}分<br>
+                        ${log.memo ? `📝 ${log.memo}` : ''}
+                    `;
+                    });
+                    bar.addEventListener('mouseleave', () => {
+                        document.getElementById('tooltip').style.opacity = 0;
+                    });
+
+                    track.appendChild(bar);
+                });
+
+                row.appendChild(track);
+                mount.appendChild(row);
+            });
+        }
+    </script>
+</body>
+
+</html>
