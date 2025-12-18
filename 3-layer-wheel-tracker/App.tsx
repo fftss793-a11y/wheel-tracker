@@ -12,7 +12,7 @@ import { uuid, formatDuration } from './utils';
 import Wheel from './components/Wheel';
 import { PromptModal, LogModal, LineSettingsModal, GlobalSettingsModal, MemoModal, HelpModal, TemplateModal } from './components/Modals';
 
-const STORAGE_KEY_CONFIG = 'wheel_config_v2';
+const STORAGE_KEY_CONFIG = 'wheel_config_factory_v3';
 const STORAGE_KEY_LOGS_PREFIX = 'timelogs_v2_';
 
 function App() {
@@ -20,10 +20,10 @@ function App() {
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
   const [currentLine, setCurrentLine] = useState<LineId>('A');
   const [activeSessions, setActiveSessions] = useState<ActiveSessionsMap>({
-    A: null, B: null, C: null, D: null, E: null
+    A: null, B: null, C: null, D: null, E: null, F: null
   });
   const [lastEnded, setLastEnded] = useState<Record<LineId, { task: string; endedAt: number } | null>>({
-    A: null, B: null, C: null, D: null, E: null
+    A: null, B: null, C: null, D: null, E: null, F: null
   });
 
   // UI State
@@ -308,7 +308,7 @@ function App() {
             localStorage.setItem(`${STORAGE_KEY_LOGS_PREFIX}${line}`, JSON.stringify(logs));
           }
         });
-        setActiveSessions({ A: null, B: null, C: null, D: null, E: null });
+        setActiveSessions({ A: null, B: null, C: null, D: null, E: null, F: null });
 
         // 2. Export all logs to CSV
         const allLogs = LINES.flatMap(line => {
@@ -346,8 +346,8 @@ function App() {
         e.preventDefault();
         if (!isEditMode && activeSessions[currentLine]) stopTracking(currentLine);
       }
-      if (!isEditMode && e.key >= '1' && e.key <= '5') {
-        const map: LineId[] = ['A', 'B', 'C', 'D', 'E'];
+      if (!isEditMode && e.key >= '1' && e.key <= '6') {
+        const map: LineId[] = ['A', 'B', 'C', 'D', 'E', 'F'];
         const idx = parseInt(e.key) - 1;
         if (map[idx]) setCurrentLine(map[idx]);
       }
@@ -376,31 +376,22 @@ function App() {
         style={{ backgroundColor: currentColor }}
       />
 
-      {/* --- CONCENTRIC HUD (Stuck to Wheel) --- */}
-      {/* 
-          We place this BEHIND the wheel or on top with pointer-events-none?
-          On top for text visibility, but ensure clicking passes through empty areas. 
-          Actually, the text should be on a layer that doesn't block wheel clicks.
-          The wheel is z-20. Let's put this at z-20 as well or z-10?
-          If z-20, we need to make sure the container is pointer-events-none.
-      */}
       {/* --- HUD: MODERN CLEAN (Four Corners) --- */}
 
       {/* TL: Clock & Date */}
       <div className="absolute top-6 left-8 z-30 pointer-events-none select-none">
-        <div className={`text-5xl font-bold tracking-tighter drop-shadow-lg font-mono ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
-          {new Date(now).toLocaleTimeString('en-US', { hour12: false })}
-          <span className="text-xl text-slate-500 ml-2 align-baseline font-sans tracking-normal">{new Date(now).getMilliseconds().toString().padStart(3, '0').slice(0, 2)}</span>
+        <div className={`text-6xl font-bold tracking-tighter drop-shadow-lg font-mono ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+          {new Date(now).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
         </div>
-        <div className="text-sm text-slate-500 font-bold tracking-[0.2em] uppercase mt-1">
-          {new Date(now).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+        <div className="text-xl text-slate-400 font-bold tracking-[0.1em] mt-1 ml-1">
+          {new Date(now).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' })}
         </div>
       </div>
 
       {/* TR: System Controls */}
       <div className="absolute top-6 right-8 z-40 flex flex-col gap-3 items-end">
         <div className="flex gap-2">
-          <button onClick={() => setIsEditMode(!isEditMode)} className={`p-3 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={20} /></button>
+          <button onClick={() => setIsEditMode(!isEditMode)} className={`p-4 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={24} /></button>
         </div>
         {isEditMode && (
           <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
@@ -420,27 +411,27 @@ function App() {
       {/* BL: Line Status */}
       <div className="fixed bottom-12 left-8 z-30 pointer-events-none select-none">
         <div className="flex items-center gap-3 mb-2">
-          <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-widest">
-            Selected Line
+          <div className="px-3 py-1 rounded text-[12px] font-bold bg-slate-800 text-slate-300 border border-slate-700 tracking-widest">
+            ライン選択
           </div>
-          {isEditMode && <span className="text-xs text-blue-400 font-bold animate-pulse">Running Setup...</span>}
+          {isEditMode && <span className="text-xs text-blue-400 font-bold animate-pulse">設定モード中...</span>}
         </div>
-        <div className={`text-5xl font-black tracking-tight drop-shadow-xl ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+        <div className={`text-6xl font-black tracking-tight drop-shadow-xl ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
           {config.lines[currentLine].name}
         </div>
-        <div className="mt-2 flex flex-col items-start gap-1">
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Current Task</div>
-          <div className="flex items-center gap-3">
-            <div className={`text-xl font-bold tracking-wide ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-500'}`}>
-              {currentSession ? currentSession.task : 'IDLE...'}
+        <div className="mt-4 flex flex-col items-start gap-1">
+          <div className="text-[12px] uppercase tracking-widest text-slate-400 font-bold">現在のステータス</div>
+          <div className="flex items-center gap-4">
+            <div className={`text-3xl font-bold tracking-wide ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-green-400') : 'text-slate-500'}`}>
+              {currentSession ? currentSession.task : '停止中'}
             </div>
             {currentSession && (
               <button
                 onClick={() => setIsMemoOpen(true)}
-                className="pointer-events-auto p-2 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-all shadow-lg active:scale-95 flex-shrink-0"
-                title="Save Memo"
+                className="pointer-events-auto p-3 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-all shadow-lg active:scale-95 flex-shrink-0"
+                title="メモを記録"
               >
-                <PenTool size={16} />
+                <PenTool size={20} />
               </button>
             )}
           </div>
@@ -449,8 +440,8 @@ function App() {
 
       {/* BR: Main Timer */}
       <div className="fixed bottom-12 right-8 z-30 pointer-events-none select-none text-right">
-        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Elapsed Duration</div>
-        <div className={`text-6xl sm:text-7xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-500'}`}>
+        <div className="text-[12px] uppercase tracking-widest text-slate-400 font-bold mb-1">経過時間</div>
+        <div className={`text-8xl sm:text-9xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-600'}`}>
           {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
         </div>
       </div>
@@ -466,10 +457,10 @@ function App() {
         }}
       >
         {/* Background Ring (Faint) */}
-        {isEditMode && <div className="absolute top-32 text-blue-400 text-xs font-bold animate-bounce uppercase tracking-widest z-40 bg-slate-950/80 px-4 py-1 rounded-full border border-blue-500/30">Edit Mode Active</div>}
+        {isEditMode && <div className="absolute top-32 text-blue-400 text-sm font-bold animate-bounce tracking-widest z-40 bg-slate-950/80 px-6 py-2 rounded-full border border-blue-500/30">設定モード実行中</div>}
         <div
           className="transition-transform duration-500 pointer-events-auto scale-[0.8] sm:scale-90 xl:scale-100"
-          style={{ transform: `translateY(${(config.wheelOffsetY || 0) - 12}px)` }}
+          style={{ transform: `translateY(${(config.wheelOffsetY || 0) - 20}px)` }}
         >
           <Wheel
             currentLine={currentLine}
@@ -495,9 +486,9 @@ function App() {
 
       {/* Undo Snackbar */}
       {undoInfo && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 text-white pl-5 pr-3 py-3 rounded-full shadow-2xl flex items-center gap-6 z-[1200] animate-in slide-in-from-top-5 fade-in duration-300">
-          <span className="text-sm font-medium tracking-wide">{undoInfo.type === 'stop' ? 'Task Stopped' : 'Auto Switched'}</span>
-          <button onClick={handleUndo} className="bg-slate-100 text-slate-900 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-white transition-colors">UNDO</button>
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 text-white pl-6 pr-4 py-4 rounded-full shadow-2xl flex items-center gap-6 z-[1200] animate-in slide-in-from-top-5 fade-in duration-300">
+          <span className="text-lg font-bold tracking-wide">{undoInfo.type === 'stop' ? 'タスク停止' : '自動切り替え'}</span>
+          <button onClick={handleUndo} className="bg-slate-100 text-slate-900 px-6 py-2 rounded-full text-sm font-black hover:bg-white transition-colors">元に戻す</button>
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { LINE_COLORS, OUTER_R, INNER_R, LINE_OUTER_R, LINE_INNER_R, LINES, EXPANDED_LINE_INNER_R, EXPANDED_LINE_OUTER_R } from '../constants';
+import { LINE_COLORS, OUTER_R, INNER_R, LINE_OUTER_R, LINE_INNER_R, LINES, EXPANDED_LINE_INNER_R, EXPANDED_LINE_OUTER_R, TASK_COLORS } from '../constants';
 import { annularSector, getLabelCoords } from '../utils';
 import { LineId, ActiveSessionsMap, Category, CategoryItem } from '../types';
 import { Activity, Pencil } from 'lucide-react';
@@ -20,6 +20,12 @@ interface WheelProps {
   onLineClick: (line: LineId) => void;
   onLineDoubleClick: (line: LineId) => void;
   onCenterClick: () => void;
+  hudData?: {
+    lineName: string;
+    timeString: string;
+    activityString: string;
+    isRecording: boolean;
+  };
 }
 
 // Sub-category layer radius (between task and line layer)
@@ -114,6 +120,9 @@ const Wheel: React.FC<WheelProps> = ({
       const isCurrentTask = !isEditMode && isTracking && currentTask.startsWith(name);
       const isExpanded = expandedTask === name;
 
+      // Determine color based on task name
+      const taskColor = TASK_COLORS[name] || '#64748b';
+
       return (
         <g
           key={i}
@@ -125,14 +134,17 @@ const Wheel: React.FC<WheelProps> = ({
           <path
             d={d}
             className={`
-              stroke-[1.5px] stroke-slate-900 transition-all duration-200
+              stroke-[3px] stroke-slate-950 transition-all duration-200
               ${isCurrentTask
-                ? 'fill-slate-800'
+                ? 'brightness-125'
                 : isExpanded
-                  ? 'fill-slate-700'
-                  : 'fill-slate-900/80 hover:fill-slate-800'
+                  ? 'brightness-110'
+                  : 'hover:brightness-110'
               }
             `}
+            style={{
+              fill: isCurrentTask ? taskColor : (isExpanded ? taskColor : (taskColor + 'cc')), // slight transparency if inactive
+            }}
           />
 
           {/* Text */}
@@ -140,8 +152,8 @@ const Wheel: React.FC<WheelProps> = ({
             x={x}
             y={y}
             className={`
-              pointer-events-none text-[14px] font-bold tracking-wide select-none transition-colors
-              ${isCurrentTask ? 'fill-white glow-text' : isExpanded ? 'fill-amber-400' : 'fill-slate-400 group-hover:fill-slate-200'}
+              pointer-events-none text-[20px] font-black tracking-wide select-none transition-colors drop-shadow-md
+              fill-white
             `}
             textAnchor="middle"
             dominantBaseline="middle"
@@ -153,8 +165,8 @@ const Wheel: React.FC<WheelProps> = ({
           {hasSubItems && !isEditMode && (
             <text
               x={x}
-              y={y + 14}
-              className="pointer-events-none text-[10px] fill-slate-500 select-none"
+              y={y + 18}
+              className="pointer-events-none text-[12px] fill-white/80 select-none font-bold"
               textAnchor="middle"
               dominantBaseline="middle"
             >
@@ -173,6 +185,8 @@ const Wheel: React.FC<WheelProps> = ({
     const { name, subItems, a0, a1 } = expandedCategoryInfo;
     const subCount = subItems.length;
     const segmentAngle = (a1 - a0) / subCount;
+    // Parent task color
+    const taskColor = TASK_COLORS[name] || currentColor;
 
     return (
       <g className="animate-in fade-in zoom-in-95 duration-200">
@@ -190,13 +204,13 @@ const Wheel: React.FC<WheelProps> = ({
             >
               <path
                 d={d}
-                style={{ fill: currentColor }}
-                className="hover:brightness-110 stroke-[2px] stroke-slate-950 transition-all duration-150"
+                style={{ fill: taskColor }}
+                className="hover:brightness-110 stroke-[3px] stroke-slate-950 transition-all duration-150"
               />
               <text
                 x={x}
                 y={y}
-                className="pointer-events-none text-[12px] font-bold fill-slate-950 select-none"
+                className="pointer-events-none text-[14px] font-bold fill-white select-none drop-shadow-sm"
                 textAnchor="middle"
                 dominantBaseline="middle"
               >
@@ -207,7 +221,7 @@ const Wheel: React.FC<WheelProps> = ({
         })}
       </g>
     );
-  }, [expandedCategoryInfo, isEditMode]);
+  }, [expandedCategoryInfo, isEditMode, currentColor]);
 
   // --- Line Segments (Outer Layer) ---
   const lineSegments = useMemo(() => {
@@ -223,7 +237,7 @@ const Wheel: React.FC<WheelProps> = ({
       const isActiveLine = line === currentLine;
       const isRunning = !!activeSessions[line];
       const lineColor = LINE_COLORS[line];
-      const rOuter = isActiveLine ? rOuterBase + 8 : rOuterBase;
+      const rOuter = isActiveLine ? rOuterBase + 12 : rOuterBase; // More pop
 
       const d = annularSector(rInner, rOuter, a0, a1);
       const { x, y } = getLabelCoords(rInner, rOuterBase, a0, a1);
@@ -240,14 +254,14 @@ const Wheel: React.FC<WheelProps> = ({
           <path
             d={d}
             className={`
-              stroke-[2px] stroke-slate-950 transition-all duration-300
+              stroke-[3px] stroke-slate-950 transition-all duration-300
               ${isEditMode ? 'hover:brightness-125' : ''}
             `}
             style={{
               fill: isEditMode
                 ? '#1e293b'
-                : (isActiveLine ? lineColor : '#1e293b'),
-              fillOpacity: isEditMode ? 1 : (isActiveLine ? 1 : 0.6),
+                : (isActiveLine ? lineColor : '#334155'), // Inactive lines are grey
+              fillOpacity: isEditMode ? 1 : (isActiveLine ? 1 : 0.8),
               stroke: isEditMode ? lineColor : '#020617',
               strokeDasharray: isEditMode ? '4 2' : 'none'
             }}
@@ -258,8 +272,8 @@ const Wheel: React.FC<WheelProps> = ({
             x={x}
             y={isActiveLine && !isEditMode ? y - 8 : y}
             className={`
-              pointer-events-none text-[16px] font-black select-none transition-all
-              ${(isActiveLine && !isEditMode) || isEditMode ? 'fill-white' : 'fill-slate-500 group-hover:fill-slate-300'}
+              pointer-events-none text-[22px] font-black select-none transition-all
+              ${(isActiveLine && !isEditMode) || isEditMode ? 'fill-white' : 'fill-slate-400 group-hover:fill-slate-200'}
             `}
             textAnchor="middle"
             dominantBaseline="middle"
@@ -278,8 +292,8 @@ const Wheel: React.FC<WheelProps> = ({
 
           {/* "Running" Indicator (Only when NOT editing) */}
           {!isEditMode && isRunning && !isActiveLine && (
-            <g transform={`translate(${x}, ${y + 18})`}>
-              <circle r={4} fill={lineColor} className="animate-pulse" />
+            <g transform={`translate(${x}, ${y + 22})`}>
+              <circle r={6} fill={lineColor} className="animate-pulse" stroke="#fff" strokeWidth="2" />
             </g>
           )}
 
@@ -287,12 +301,12 @@ const Wheel: React.FC<WheelProps> = ({
           {!isEditMode && isActiveLine && (
             <text
               x={x}
-              y={y + 12}
-              className="pointer-events-none text-[10px] fill-white/90 font-mono tracking-widest uppercase"
+              y={y + 16}
+              className="pointer-events-none text-[12px] fill-white/90 font-bold tracking-widest uppercase"
               textAnchor="middle"
               dominantBaseline="middle"
             >
-              {isRunning ? 'RUNNING' : 'SELECT'}
+              {isRunning ? '稼働中' : '選択中'}
             </text>
           )}
         </g>
@@ -304,6 +318,11 @@ const Wheel: React.FC<WheelProps> = ({
   const handleContainerClick = () => {
     if (expandedTask) setExpandedTask(null);
   };
+
+  // Center Button Color logic
+  const centerColor = isTracking
+    ? (TASK_COLORS[currentTask.split(' > ')[0]] || currentColor)
+    : currentColor;
 
   return (
     <div
@@ -326,7 +345,6 @@ const Wheel: React.FC<WheelProps> = ({
         {subCategorySegments}
 
         {/* Rotating Outer Ring (Active State - Satellite Orbit) */}
-        {/* Rotating Outer Ring (Active State - Satellite Orbit) */}
         {!isEditMode && isTracking && (
           <g style={{ opacity: 1 }}>
             {/* Native SVG Animation to ensure rotation around 0,0 */}
@@ -343,7 +361,7 @@ const Wheel: React.FC<WheelProps> = ({
             <circle
               r={EXPANDED_LINE_OUTER_R + 10}
               fill="none"
-              stroke={currentColor}
+              stroke={centerColor}
               strokeWidth="1"
               strokeOpacity="0.2"
             />
@@ -351,9 +369,9 @@ const Wheel: React.FC<WheelProps> = ({
             {/* Satellite Body (The "Comet") */}
             <g transform={`translate(${EXPANDED_LINE_OUTER_R + 10}, 0)`}>
               {/* Head */}
-              <circle r={4} fill="#fff" className="drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+              <circle r={6} fill="#fff" className="drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
               {/* Colored Glow */}
-              <circle r={8} fill={currentColor} fillOpacity="0.5" className="blur-[2px]" />
+              <circle r={12} fill={centerColor} fillOpacity="0.5" className="blur-[4px]" />
             </g>
           </g>
         )}
@@ -378,8 +396,8 @@ const Wheel: React.FC<WheelProps> = ({
           `}
           style={!isEditMode ? {
             boxShadow: isTracking
-              ? `0 0 30px ${currentColor}40, inset 0 0 20px rgba(0,0,0,0.5)`
-              : `0 0 0 4px ${currentColor}, inset 0 0 20px rgba(0,0,0,0.8)`
+              ? `0 0 40px ${centerColor}60, inset 0 0 20px rgba(0,0,0,0.5)`
+              : `0 0 0 6px ${currentColor}, inset 0 0 20px rgba(0,0,0,0.8)`
           } : {}}
         >
           <div className={`absolute inset-0 bg-slate-900 ${isEditMode ? 'opacity-100' : ''}`}></div>
@@ -389,26 +407,26 @@ const Wheel: React.FC<WheelProps> = ({
             <>
               {isTracking && (
                 <div
-                  className="absolute inset-0 opacity-20 animate-[spin_4s_linear_infinite]"
-                  style={{ background: `conic-gradient(from 0deg, transparent 0%, ${currentColor} 50%, transparent 100%)` }}
+                  className="absolute inset-0 opacity-30 animate-[spin_4s_linear_infinite]"
+                  style={{ background: `conic-gradient(from 0deg, transparent 0%, ${centerColor} 50%, transparent 100%)` }}
                 ></div>
               )}
               <div className="relative z-10 flex flex-col items-center justify-center">
                 <div
-                  className="px-2 py-0.5 rounded text-[10px] font-bold tracking-[0.2em] mb-1"
-                  style={{ backgroundColor: isTracking ? currentColor : '#334155', color: isTracking ? '#000' : '#94a3b8' }}
+                  className="px-3 py-1 rounded text-[14px] font-bold tracking-[0.1em] mb-1"
+                  style={{ backgroundColor: isTracking ? centerColor : '#334155', color: isTracking ? '#fff' : '#94a3b8' }}
                 >
-                  {isTracking ? 'REC' : 'IDLE'}
+                  {isTracking ? '記録中' : '停止中'}
                 </div>
-                <span className="text-xl font-black text-center leading-none tracking-tight drop-shadow-md mt-1 max-w-[120px] truncate">
-                  {isTracking ? currentTask : 'START'}
+                <span className="text-3xl font-black text-center leading-none tracking-tight drop-shadow-md mt-1 max-w-[140px] truncate">
+                  {isTracking ? currentTask.split(' > ')[0] : '開始'}
                 </span>
                 {!isTracking && (
-                  <span className="text-[10px] text-slate-500 mt-2 uppercase tracking-wide">
-                    Select Task
+                  <span className="text-[14px] text-slate-400 mt-2 font-bold tracking-wide">
+                    タスクを選択
                   </span>
                 )}
-                {isTracking && <Activity className="w-5 h-5 mt-2 animate-pulse text-white/80" />}
+                {isTracking && <Activity className="w-8 h-8 mt-2 animate-pulse text-white" />}
               </div>
             </>
           )}
@@ -416,8 +434,8 @@ const Wheel: React.FC<WheelProps> = ({
           {/* Edit Mode Content */}
           {isEditMode && (
             <div className="relative z-10 flex flex-col items-center justify-center text-slate-300">
-              <span className="text-xl font-black mb-1">EXIT EDIT</span>
-              <span className="text-[10px] uppercase tracking-wider text-slate-500">Close Settings</span>
+              <span className="text-xl font-black mb-1">編集終了</span>
+              <span className="text-[12px] uppercase tracking-wider text-slate-500">Close Settings</span>
             </div>
           )}
 

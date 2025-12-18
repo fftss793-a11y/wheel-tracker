@@ -1,6 +1,6 @@
 import { AppConfig, LineId } from './types';
 
-export const LINES: LineId[] = ['A', 'B', 'C', 'D', 'E'];
+export const LINES: LineId[] = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 // Neon / High Contrast Colors for Dark Mode
 export const LINE_COLORS: Record<LineId, string> = {
@@ -8,7 +8,21 @@ export const LINE_COLORS: Record<LineId, string> = {
   B: '#10b981', // Emerald (Bright)
   C: '#f59e0b', // Amber (Bright)
   D: '#8b5cf6', // Violet (Bright)
-  E: '#ef4444', // Red (Bright)
+  E: '#64748b', // Slate (Rest)
+  F: '#ec4899', // Pink (Bright)
+};
+
+export const TASK_COLORS: Record<string, string> = {
+  "稼働": "#22c55e", // Green (Production)
+  "生産": "#22c55e", // Green (Production)
+  "トラブル": "#ef4444", // Red (Trouble)
+  "停止": "#ef4444", // Red (Stop)
+  "待機": "#eab308", // Yellow (Wait)
+  "段取り": "#3b82f6", // Blue (Setup)
+  "休憩": "#64748b", // Slate (Break)
+  "計画休憩": "#3b82f6", // Blue (Planned Rest)
+  "調整休憩": "#6366f1", // Indigo (Adjustment Rest)
+  "立ち下げ": "#475569", // Dark Slate (Shutdown)
 };
 
 export const LINE_BG_COLORS: Record<LineId, string> = {
@@ -16,7 +30,8 @@ export const LINE_BG_COLORS: Record<LineId, string> = {
   B: 'bg-emerald-500',
   C: 'bg-amber-500',
   D: 'bg-violet-500',
-  E: 'bg-red-500',
+  E: 'bg-slate-500',
+  F: 'bg-pink-500',
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -27,8 +42,7 @@ export const DEFAULT_CONFIG: AppConfig = {
         { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
         { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
-        "休憩"
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
       ]
     },
     B: {
@@ -37,8 +51,7 @@ export const DEFAULT_CONFIG: AppConfig = {
         { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
         { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
-        "休憩"
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
       ]
     },
     C: {
@@ -47,8 +60,7 @@ export const DEFAULT_CONFIG: AppConfig = {
         { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
         { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
-        "休憩"
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
       ]
     },
     D: {
@@ -57,18 +69,23 @@ export const DEFAULT_CONFIG: AppConfig = {
         { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
         { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
-        "休憩"
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
       ]
     },
     E: {
-      name: 'LINE E',
+      name: '休憩',
+      categories: [
+        "計画休憩",
+        "調整休憩"
+      ]
+    },
+    F: {
+      name: 'LINE F',
       categories: [
         { name: "生産", subCategories: ["有人稼働", "無人稼働", "試作"] },
         { name: "段取り", subCategories: ["型替・切替", "材料補給", "調整・空運転", "始業点検"] },
         { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
-        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] },
-        "休憩"
+        { name: "停止", subCategories: ["計画停止", "手待ち", "朝礼・MTG", "清掃・5S"] }
       ]
     },
   },

@@ -1,4 +1,4 @@
-export type LineId = 'A' | 'B' | 'C' | 'D' | 'E';
+export type LineId = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
 
 export interface CategoryItem {
   name: string;

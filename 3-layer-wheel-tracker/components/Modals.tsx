@@ -132,9 +132,9 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
                 <div className="max-w-5xl mx-auto flex flex-col gap-2">
                     {/* Header Bar */}
                     <div className="sticky top-0 z-10 grid grid-cols-[100px_1fr] md:grid-cols-[120px_200px_1fr] gap-x-4 px-3 py-2 bg-[#020617] border-b border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        <div>Line</div>
-                        <div>Task</div>
-                        <div className="col-span-2 md:col-span-1 text-right md:text-left">Time / Detail</div>
+                        <div>ライン</div>
+                        <div>タスク</div>
+                        <div className="col-span-2 md:col-span-1 text-right md:text-left">時間 / 詳細</div>
                     </div>
                     {filteredLogs.map(log => (
                         <div key={log.id} className="grid grid-cols-[100px_1fr] md:grid-cols-[120px_200px_1fr] gap-x-4 gap-y-1 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-700 transition-all text-xs md:text-sm">
@@ -177,7 +177,7 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
                             </div>
                         </div>
                     ))}
-                    {filteredLogs.length === 0 && <div className="text-center py-20 text-slate-600 font-mono">NO LOGS FOUND</div>}
+                    {filteredLogs.length === 0 && <div className="text-center py-20 text-slate-600 font-mono">ログが見つかりません</div>}
                 </div>
             </div>
         </div>
