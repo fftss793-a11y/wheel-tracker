@@ -131,13 +131,14 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 <div className="max-w-5xl mx-auto flex flex-col gap-2">
                     {/* Header Bar */}
-                    <div className="sticky top-0 z-10 grid grid-cols-[100px_1fr] md:grid-cols-[120px_200px_1fr] gap-x-4 px-3 py-2 bg-[#020617] border-b border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="sticky top-0 z-10 grid grid-cols-[100px_1fr] md:grid-cols-[100px_150px_300px_1fr] gap-x-4 px-3 py-2 bg-[#020617] border-b border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                         <div>ライン</div>
                         <div>タスク</div>
+                        <div className="hidden md:block">メモ</div>
                         <div className="col-span-2 md:col-span-1 text-right md:text-left">時間 / 詳細</div>
                     </div>
                     {filteredLogs.map(log => (
-                        <div key={log.id} className="grid grid-cols-[100px_1fr] md:grid-cols-[120px_200px_1fr] gap-x-4 gap-y-1 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-700 transition-all text-xs md:text-sm">
+                        <div key={log.id} className="grid grid-cols-[100px_1fr] md:grid-cols-[100px_150px_300px_1fr] gap-x-4 gap-y-1 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-700 transition-all text-xs md:text-sm">
                             <div className="flex items-center">
                                 <span
                                     className="px-2 py-0.5 rounded text-[10px] md:text-xs font-bold text-slate-950 mr-2 shadow-[0_0_10px_-3px_currentColor]"
@@ -147,27 +148,53 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
                                 </span>
                                 <span className="truncate opacity-80 font-mono text-xs">{log.lineName}</span>
                             </div>
-                            <div className="font-bold text-white tracking-wide flex items-center gap-2">
+                            <div className="font-bold text-white tracking-wide flex items-center">
                                 {log.task}
+                            </div>
+                            <div className="hidden md:flex items-center">
                                 {editingLogId === log.id ? (
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 w-full">
                                         <input
                                             type="text"
                                             value={editMemo}
                                             onChange={e => setEditMemo(e.target.value)}
-                                            className="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-32 focus:outline-none focus:border-blue-500 font-normal"
+                                            className="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs text-white flex-1 focus:outline-none focus:border-blue-500 font-normal"
                                             autoFocus
                                             onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(log); if (e.key === 'Escape') handleCancelEdit(); }}
                                         />
-                                        <button onClick={() => handleSaveEdit(log)} className="text-green-400 hover:text-green-300 text-[10px] px-1">✓</button>
-                                        <button onClick={handleCancelEdit} className="text-red-400 hover:text-red-300 text-[10px] px-1">✕</button>
+                                        <button onClick={() => handleSaveEdit(log)} className="text-green-400 hover:text-green-300 text-sm px-1">✓</button>
+                                        <button onClick={handleCancelEdit} className="text-red-400 hover:text-red-300 text-sm px-1">✕</button>
                                     </div>
                                 ) : (
                                     <button
                                         onClick={() => handleStartEdit(log)}
-                                        className={`text-[10px] border px-1.5 py-0.5 rounded transition-colors font-normal ${log.memo ? 'text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20' : 'text-slate-500 border-slate-600 hover:text-slate-300 hover:border-slate-500'}`}
+                                        className={`text-xs border px-2 py-1 rounded transition-colors font-normal max-w-full truncate ${log.memo ? 'text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20' : 'text-slate-500 border-slate-600 hover:text-slate-300 hover:border-slate-500'}`}
                                     >
-                                        📝 {log.memo || 'メモ'}
+                                        📝 {log.memo || 'メモを追加...'}
+                                    </button>
+                                )}
+                            </div>
+                            {/* Mobile: show memo below task */}
+                            <div className="md:hidden col-span-2 flex items-center mt-1">
+                                {editingLogId === log.id ? (
+                                    <div className="flex items-center gap-1 w-full">
+                                        <input
+                                            type="text"
+                                            value={editMemo}
+                                            onChange={e => setEditMemo(e.target.value)}
+                                            className="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs text-white flex-1 focus:outline-none focus:border-blue-500 font-normal"
+                                            autoFocus
+                                            onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(log); if (e.key === 'Escape') handleCancelEdit(); }}
+                                        />
+                                        <button onClick={() => handleSaveEdit(log)} className="text-green-400 hover:text-green-300 text-sm px-1">✓</button>
+                                        <button onClick={handleCancelEdit} className="text-red-400 hover:text-red-300 text-sm px-1">✕</button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => handleStartEdit(log)}
+                                        className={`text-xs border px-2 py-1 rounded transition-colors font-normal ${log.memo ? 'text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20' : 'text-slate-500 border-slate-600 hover:text-slate-300 hover:border-slate-500'}`}
+                                    >
+                                        📝 {log.memo || 'メモを追加...'}
                                     </button>
                                 )}
                             </div>

@@ -41,7 +41,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       categories: [
         "生産",
         { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
-        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "トラブル", subCategories: ["設備故障", "設備異常", "品質異常", "その他"] },
         { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
@@ -50,7 +50,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       categories: [
         "生産",
         { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
-        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "トラブル", subCategories: ["設備故障", "設備異常", "品質異常", "その他"] },
         { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
@@ -59,7 +59,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       categories: [
         "生産",
         { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
-        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "トラブル", subCategories: ["設備故障", "設備異常", "品質異常", "その他"] },
         { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
@@ -68,7 +68,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       categories: [
         "生産",
         { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
-        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "トラブル", subCategories: ["設備故障", "設備異常", "品質異常", "その他"] },
         { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },
@@ -84,7 +84,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       categories: [
         "生産",
         { name: "段取り", subCategories: ["Lot切替", "材料補給", "調整", "始業点検"] },
-        { name: "トラブル", subCategories: ["設備故障", "材料不良", "品質異常", "部品欠品", "その他"] },
+        { name: "トラブル", subCategories: ["設備故障", "設備異常", "品質異常", "その他"] },
         { name: "停止", subCategories: ["計画停止", "手待ち"] }
       ]
     },

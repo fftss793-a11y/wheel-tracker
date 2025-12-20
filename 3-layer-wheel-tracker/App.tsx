@@ -480,12 +480,19 @@ function App() {
         memo={currentMemo}
         onSave={(memo) => {
           setCurrentMemo(memo);
-          if (activeSessions[currentLine]) {
-            setActiveSessions(prev => ({
+          // Update memo while explicitly preserving task and startedAt
+          setActiveSessions(prev => {
+            const current = prev[currentLine];
+            if (!current) return prev; // No active session, don't update
+            return {
               ...prev,
-              [currentLine]: { ...prev[currentLine]!, memo }
-            }));
-          }
+              [currentLine]: {
+                task: current.task,
+                startedAt: current.startedAt,
+                memo: memo
+              }
+            };
+          });
         }}
         lineName={config.lines[currentLine].name}
         presets={config.lines[currentLine].memoPresets || []}
