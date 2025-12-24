@@ -5,11 +5,12 @@ import {
   PenTool, Download, Upload, Plus, Trash2, Edit2, Layers, LogOut
 } from 'lucide-react';
 import {
-  AppConfig, LineId, LogEntry, ActiveSessionsMap, UndoInfo, PromptState
+  AppConfig, LineId, LogEntry, ActiveSessionsMap, UndoInfo, PromptState, UIElementId, UIPosition
 } from './types';
 import { DEFAULT_CONFIG, LINES, LINE_COLORS } from './constants';
 import { uuid, formatDuration } from './utils';
 import Wheel from './components/Wheel';
+import Draggable from './components/Draggable';
 import { PromptModal, LogModal, LineSettingsModal, GlobalSettingsModal, MemoModal, HelpModal, TemplateModal } from './components/Modals';
 
 const STORAGE_KEY_CONFIG = 'wheel_config_factory_v6';
@@ -161,10 +162,10 @@ function App() {
     if (!undoInfo) return;
     const { line, log } = undoInfo;
     removeLog(line, log.id);
-    setActiveSessions(prev => ({ ...prev, [line]: { task: log.task, startedAt: log.startedAt } }));
+    setActiveSessions(prev => ({ ...prev, [line]: { task: log.task, startedAt: log.startedAt, memo: log.memo } }));
+    setCurrentMemo(log.memo || '');
     setUndoInfo(null);
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-
   };
 
 
@@ -180,6 +181,9 @@ function App() {
       setEditingLine(line); // Open Line Editor
     } else {
       setCurrentLine(line); // Switch Line
+      // Sync currentMemo with the selected line's session memo
+      const session = activeSessions[line];
+      setCurrentMemo(session?.memo || '');
     }
   };
 
@@ -302,6 +306,30 @@ function App() {
   const currentColor = LINE_COLORS[currentLine];
   const isLightTheme = config.theme === 'light';
 
+  // Default UI positions
+  const defaultUIPositions: Record<UIElementId, UIPosition> = {
+    clock: { x: 32, y: 24, anchor: 'top-left' },
+    controls: { x: 32, y: 24, anchor: 'top-right' },
+    lineStatus: { x: 32, y: 48, anchor: 'bottom-left' },
+    timer: { x: 32, y: 48, anchor: 'bottom-right' }
+  };
+
+  // Get current UI positions (merge with defaults)
+  const getUIPosition = (id: UIElementId): UIPosition => {
+    return config.uiPositions?.[id] || defaultUIPositions[id];
+  };
+
+  // Handle UI position changes
+  const handleUIPositionChange = (id: string, position: UIPosition) => {
+    setConfig(prev => ({
+      ...prev,
+      uiPositions: {
+        ...prev.uiPositions,
+        [id]: position
+      }
+    }));
+  };
+
   return (
     <div className={`min-h-screen w-full relative overflow-hidden font-sans selection:bg-blue-500/30 transition-colors duration-500 ${isLightTheme ? 'bg-slate-100 text-slate-900' : 'bg-slate-950 text-slate-100'} ${isEditMode ? 'ring-8 ring-inset ring-blue-500/20' : ''}`}>
 
@@ -314,72 +342,108 @@ function App() {
       {/* --- HUD: MODERN CLEAN (Four Corners) --- */}
 
       {/* TL: Clock & Date */}
-      <div className="absolute top-6 left-8 z-30 pointer-events-none select-none">
-        <div className={`text-6xl font-bold tracking-tighter drop-shadow-lg font-mono ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
-          {new Date(now).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+      <Draggable
+        id="clock"
+        initialPosition={getUIPosition('clock')}
+        isEnabled={isEditMode}
+        onPositionChange={handleUIPositionChange}
+        className="z-30"
+        bounds={{ left: 0, top: 0, right: 0, bottom: 0 }}
+      >
+        <div className={`select-none ${isEditMode ? '' : 'pointer-events-none'}`}>
+          <div className={`text-6xl font-bold tracking-tighter drop-shadow-lg font-mono ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+            {new Date(now).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+          </div>
+          <div className="text-xl text-slate-400 font-bold tracking-[0.1em] mt-1 ml-1">
+            {new Date(now).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' })}
+          </div>
         </div>
-        <div className="text-xl text-slate-400 font-bold tracking-[0.1em] mt-1 ml-1">
-          {new Date(now).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' })}
-        </div>
-      </div>
+      </Draggable>
 
       {/* TR: System Controls */}
-      <div className="absolute top-6 right-8 z-40 flex flex-col gap-3 items-end">
-        <div className="flex gap-2">
-          <button onClick={() => setIsEditMode(!isEditMode)} className={`p-4 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={24} /></button>
-        </div>
-        {isEditMode && (
-          <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
-            <button onClick={handleEndOfDay} className="p-3 rounded-lg bg-orange-600/80 border border-orange-500 text-white hover:bg-orange-500 transition-all shadow-lg" title="終業">
-              <LogOut size={20} />
-            </button>
-            <button onClick={() => setIsTemplateOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="テンプレート">
-              <Layers size={20} />
-            </button>
-            <button onClick={() => setIsLogOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ログ"><FileText size={20} /></button>
-            <button onClick={() => setIsGlobalSettingsOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="全体設定"><LayoutDashboard size={20} /></button>
-            <button onClick={() => setIsHelpOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ヘルプ"><HelpCircle size={20} /></button>
+      <Draggable
+        id="controls"
+        initialPosition={getUIPosition('controls')}
+        isEnabled={isEditMode}
+        onPositionChange={handleUIPositionChange}
+        className="z-40"
+        bounds={{ left: 0, top: 0, right: 0, bottom: 0 }}
+      >
+        <div className="flex flex-col gap-3 items-end pointer-events-auto">
+          <div className="flex gap-2">
+            <button onClick={() => setIsEditMode(!isEditMode)} className={`p-4 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={24} /></button>
           </div>
-        )}
-      </div>
+          {isEditMode && (
+            <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
+              <button onClick={handleEndOfDay} className="p-3 rounded-lg bg-orange-600/80 border border-orange-500 text-white hover:bg-orange-500 transition-all shadow-lg" title="終業">
+                <LogOut size={20} />
+              </button>
+              <button onClick={() => setIsTemplateOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="テンプレート">
+                <Layers size={20} />
+              </button>
+              <button onClick={() => setIsLogOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ログ"><FileText size={20} /></button>
+              <button onClick={() => setIsGlobalSettingsOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="全体設定"><LayoutDashboard size={20} /></button>
+              <button onClick={() => setIsHelpOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ヘルプ"><HelpCircle size={20} /></button>
+            </div>
+          )}
+        </div>
+      </Draggable>
 
       {/* BL: Line Status */}
-      <div className="fixed bottom-12 left-8 z-30 pointer-events-none select-none">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="px-3 py-1 rounded text-[12px] font-bold bg-slate-800 text-slate-300 border border-slate-700 tracking-widest">
-            ライン選択
-          </div>
-          {isEditMode && <span className="text-xs text-blue-400 font-bold animate-pulse">設定モード中...</span>}
-        </div>
-        <div className={`text-6xl font-black tracking-tight drop-shadow-xl ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
-          {config.lines[currentLine].name}
-        </div>
-        <div className="mt-4 flex flex-col items-start gap-1">
-          <div className="text-[12px] uppercase tracking-widest text-slate-400 font-bold">現在のステータス</div>
-          <div className="flex items-center gap-4">
-            <div className={`text-3xl font-bold tracking-wide ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-green-400') : 'text-slate-500'}`}>
-              {currentSession ? currentSession.task : '停止中'}
+      <Draggable
+        id="lineStatus"
+        initialPosition={getUIPosition('lineStatus')}
+        isEnabled={isEditMode}
+        onPositionChange={handleUIPositionChange}
+        className="z-30"
+        bounds={{ left: 0, top: 0, right: 0, bottom: 0 }}
+      >
+        <div className={`select-none ${isEditMode ? '' : 'pointer-events-none'}`}>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="px-3 py-1 rounded text-[12px] font-bold bg-slate-800 text-slate-300 border border-slate-700 tracking-widest">
+              ライン選択
             </div>
-            {currentSession && (
-              <button
-                onClick={() => setIsMemoOpen(true)}
-                className="pointer-events-auto p-3 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-all shadow-lg active:scale-95 flex-shrink-0"
-                title="メモを記録"
-              >
-                <PenTool size={20} />
-              </button>
-            )}
+            {isEditMode && <span className="text-xs text-blue-400 font-bold animate-pulse">設定モード中...</span>}
+          </div>
+          <div className={`text-6xl font-black tracking-tight drop-shadow-xl ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+            {config.lines[currentLine].name}
+          </div>
+          <div className="mt-4 flex flex-col items-start gap-1">
+            <div className="text-[12px] uppercase tracking-widest text-slate-400 font-bold">現在のステータス</div>
+            <div className="flex items-center gap-4">
+              <div className={`text-3xl font-bold tracking-wide ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-green-400') : 'text-slate-500'}`}>
+                {currentSession ? currentSession.task : '停止中'}
+              </div>
+              {currentSession && !isEditMode && (
+                <button
+                  onClick={() => setIsMemoOpen(true)}
+                  className="pointer-events-auto p-3 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-all shadow-lg active:scale-95 flex-shrink-0"
+                  title="メモを記録"
+                >
+                  <PenTool size={20} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </Draggable>
 
       {/* BR: Main Timer */}
-      <div className="fixed bottom-12 right-8 z-30 pointer-events-none select-none text-right">
-        <div className="text-[12px] uppercase tracking-widest text-slate-400 font-bold mb-1">経過時間</div>
-        <div className={`text-8xl sm:text-9xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-600'}`}>
-          {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
+      <Draggable
+        id="timer"
+        initialPosition={getUIPosition('timer')}
+        isEnabled={isEditMode}
+        onPositionChange={handleUIPositionChange}
+        className="z-30"
+        bounds={{ left: 0, top: 0, right: 0, bottom: 0 }}
+      >
+        <div className={`select-none text-right ${isEditMode ? '' : 'pointer-events-none'}`}>
+          <div className="text-[12px] uppercase tracking-widest text-slate-400 font-bold mb-1">経過時間</div>
+          <div className={`text-8xl sm:text-9xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-600'}`}>
+            {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
+          </div>
         </div>
-      </div>
+      </Draggable>
 
       {/* Corner Controls (Minimal) */}
       {/* Wheel Container - Centered */}
@@ -395,7 +459,7 @@ function App() {
         {isEditMode && <div className="absolute top-32 text-blue-400 text-sm font-bold animate-bounce tracking-widest z-40 bg-slate-950/80 px-6 py-2 rounded-full border border-blue-500/30">設定モード実行中</div>}
         <div
           className="transition-transform duration-500 pointer-events-auto scale-[0.8] sm:scale-90 xl:scale-100"
-          style={{ transform: `translateY(${(config.wheelOffsetY || 0) - 20}px)` }}
+          style={{ transform: `translateY(${config.wheelOffsetY || 0}px)` }}
         >
           <Wheel
             currentLine={currentLine}

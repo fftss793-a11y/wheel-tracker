@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wheel Tracker Log Visualizer (Drag & Drop)</title>
+    <title>Wheel Tracker Log Visualizer (Multi-CSV Support)</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -34,7 +34,7 @@
             text-align: center;
             background: #1e293b;
             color: #94a3b8;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             transition: all 0.2s;
             cursor: pointer;
         }
@@ -56,7 +56,145 @@
             display: block;
         }
 
-        /* Chart Styles (Same as before) */
+        /* File List */
+        #file-list {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        #file-list.active {
+            display: block;
+        }
+
+        .file-list-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #334155;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            font-size: 1.2rem;
+        }
+
+        .file-name {
+            font-weight: 500;
+        }
+
+        .file-count {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .file-remove {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .file-remove:hover {
+            background: #ef444420;
+        }
+
+        /* Summary & Actions */
+        #summary-bar {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #summary-bar.active {
+            display: flex;
+        }
+
+        .summary-text {
+            font-size: 1.1rem;
+        }
+
+        .summary-text strong {
+            color: #3b82f6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #16a34a;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Chart Styles */
         .chart-container {
             position: relative;
             overflow-x: auto;
@@ -170,33 +308,26 @@
             background: #22c55e;
         }
 
-        /* Green: 稼働 */
         .color-setup {
             background: #3b82f6;
         }
 
-        /* Blue: 作業中 */
         .color-trouble {
             background: #ef4444;
         }
 
-        /* Red: 異常 */
         .color-stop {
             background: #eab308;
             color: black;
         }
 
-        /* Yellow: 待機 (文字色黒で見やすく) */
         .color-break {
             background: #94a3b8;
         }
 
-        /* Gray: 休憩 */
         .color-other {
             background: #a855f7;
         }
-
-        /* Purple: その他 */
 
         .legend {
             display: flex;
@@ -253,8 +384,26 @@
 
         <div id="drop-zone">
             <span class="icon">📂</span>
-            <p>ここにCSVファイルをドラッグ＆ドロップ<br>またはクリックして選択</p>
-            <input type="file" id="file-input" accept=".csv" style="display: none;">
+            <p>ここにCSVファイルをドラッグ＆ドロップ<br>または クリックして選択<br><small>(複数ファイル対応)</small></p>
+            <input type="file" id="file-input" accept=".csv" multiple style="display: none;">
+        </div>
+
+        <div id="file-list">
+            <div class="file-list-header">
+                <span>📁 読み込んだファイル</span>
+                <button class="btn btn-danger" onclick="clearAllFiles()" style="padding: 6px 12px; font-size: 0.8rem;">すべてクリア</button>
+            </div>
+            <div id="file-items"></div>
+        </div>
+
+        <div id="summary-bar">
+            <div class="summary-text">
+                合計: <strong id="total-count">0</strong> 件のログ
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="showChart()">📊 ガントチャート表示</button>
+                <button class="btn btn-secondary" onclick="downloadMerged()">📥 マージしてダウンロード</button>
+            </div>
         </div>
 
         <div id="legend" class="legend">
@@ -285,8 +434,15 @@
     <script>
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const fileItems = document.getElementById('file-items');
+        const summaryBar = document.getElementById('summary-bar');
         const chartContainer = document.getElementById('chart-container');
         const legend = document.getElementById('legend');
+
+        // Store loaded files and their parsed data
+        let loadedFiles = [];
+        let allParsedLogs = [];
 
         // Drag & Drop Handlers
         dropZone.addEventListener('click', () => fileInput.click());
@@ -304,28 +460,139 @@
             e.preventDefault();
             dropZone.classList.remove('dragover');
             if (e.dataTransfer.files.length) {
-                handleFile(e.dataTransfer.files[0]);
+                handleFiles(Array.from(e.dataTransfer.files));
             }
         });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length) {
-                handleFile(e.target.files[0]);
+                handleFiles(Array.from(e.target.files));
             }
         });
 
-        function handleFile(file) {
-            if (!file.name.endsWith('.csv')) {
+        function handleFiles(files) {
+            const csvFiles = files.filter(f => f.name.endsWith('.csv'));
+            if (csvFiles.length === 0) {
                 alert('CSVファイルを選択してください');
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                renderChart(e.target.result);
-                document.querySelector('h1').innerText = `生産ログ: ${file.name}`;
-            };
-            reader.readAsText(file);
+            csvFiles.forEach(file => {
+                // Check if file already loaded
+                if (loadedFiles.some(f => f.name === file.name)) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const logs = parseCSV(e.target.result);
+                    loadedFiles.push({
+                        name: file.name,
+                        logs: logs,
+                        count: logs.length
+                    });
+                    updateUI();
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        function removeFile(fileName) {
+            loadedFiles = loadedFiles.filter(f => f.name !== fileName);
+            updateUI();
+        }
+
+        function clearAllFiles() {
+            loadedFiles = [];
+            allParsedLogs = [];
+            updateUI();
+            chartContainer.classList.remove('active');
+            legend.classList.remove('active');
+        }
+
+        function updateUI() {
+            // Update file list
+            if (loadedFiles.length > 0) {
+                fileList.classList.add('active');
+                summaryBar.classList.add('active');
+
+                fileItems.innerHTML = loadedFiles.map(f => `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <span class="file-icon">📄</span>
+                            <span class="file-name">${f.name}</span>
+                            <span class="file-count">(${f.count}件)</span>
+                        </div>
+                        <button class="file-remove" onclick="removeFile('${f.name}')">✕</button>
+                    </div>
+                `).join('');
+
+                // Calculate total
+                const total = loadedFiles.reduce((sum, f) => sum + f.count, 0);
+                document.getElementById('total-count').textContent = total;
+
+                // Merge all logs
+                allParsedLogs = mergeAndSortLogs();
+            } else {
+                fileList.classList.remove('active');
+                summaryBar.classList.remove('active');
+                fileItems.innerHTML = '';
+            }
+        }
+
+        function mergeAndSortLogs() {
+            const allLogs = loadedFiles.flatMap(f => f.logs);
+            
+            // Remove duplicates (same start time and task)
+            const seen = new Set();
+            const unique = allLogs.filter(log => {
+                const key = `${log.start.getTime()}-${log.task}-${log.id}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+
+            // Sort by start time
+            return unique.sort((a, b) => a.start - b.start);
+        }
+
+        function showChart() {
+            if (allParsedLogs.length === 0) {
+                alert('ログデータがありません');
+                return;
+            }
+            renderChart(allParsedLogs);
+        }
+
+        function downloadMerged() {
+            if (allParsedLogs.length === 0) {
+                alert('ログデータがありません');
+                return;
+            }
+
+            const header = ['ラインID', 'ライン名', 'タスク', '開始日時', '終了日時', '所要時間(秒)', 'メモ'];
+            const rows = allParsedLogs.map(l => {
+                const dur = Math.round((l.end - l.start) / 1000);
+                const esc = (s) => `"${String(s || '').replace(/"/g, '""')}"`;
+                const formatDate = (d) => d.toLocaleString('ja-JP');
+                return [l.id, esc(l.name), esc(l.task), esc(formatDate(l.start)), esc(formatDate(l.end)), dur, esc(l.memo)].join(',');
+            });
+
+            const blob = new Blob([[header.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            
+            // Generate filename with date range
+            const firstDate = allParsedLogs[0].start.toISOString().slice(0, 10);
+            const lastDate = allParsedLogs[allParsedLogs.length - 1].start.toISOString().slice(0, 10);
+            const fileName = firstDate === lastDate 
+                ? `timelogs_merged_${firstDate}.csv`
+                : `timelogs_merged_${firstDate}_to_${lastDate}.csv`;
+            
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function parseCSV(csv) {
@@ -363,7 +630,7 @@
 
             headers.forEach((h, i) => {
                 const header = h.trim();
-                if (header === 'ID' || header === 'id') map.id = i;
+                if (header === 'ID' || header === 'id' || header === 'ラインID') map.id = i;
                 if (header === 'ライン名' || header === 'name' || header === 'Name') map.name = i;
                 if (header === 'タスク' || header === 'task' || header === 'Task') map.task = i;
                 if (header === '開始日時' || header === 'start' || header === 'Start') map.start = i;
@@ -380,8 +647,6 @@
             // Validation: Ensure minimum required columns exist
             if (map.start === -1 || map.end === -1) {
                 console.warn("Required columns (Start/End) not found in header.");
-                // Fallback to old indices if headers completely fail to match (backward compatibility attempt)
-                // Old format assumption: 0:id, 1:name, 2:task, 3:start, 4:end, 5:duration
                 if (map.start === -1) {
                     map.id = 0;
                     map.name = 1;
@@ -395,13 +660,13 @@
 
             for (let i = 1; i < lines.length; i++) {
                 const row = splitCSVLine(lines[i]);
-                if (row.length < 3) continue; // Skip empty rows
+                if (row.length < 3) continue;
 
                 const getValue = (index) => index !== -1 && index < row.length ? row[index] : "";
 
                 const startStr = getValue(map.start);
                 const endStr = getValue(map.end);
-                
+
                 if (!startStr || !endStr) continue;
 
                 const start = new Date(startStr);
@@ -424,16 +689,15 @@
 
         function getTaskClass(taskName) {
             if (!taskName) return "color-other";
-            if (taskName.includes("生産")) return "color-production";
-            if (taskName.includes("段取り") || taskName.includes("切替") || taskName.includes("始業点検")) return "color-setup";
+            if (taskName.includes("生産") || taskName.includes("稼働")) return "color-production";
+            if (taskName.includes("段取り") || taskName.includes("切替") || taskName.includes("始業点検") || taskName.includes("立ち上げ") || taskName.includes("立ち下げ")) return "color-setup";
             if (taskName.includes("トラブル") || taskName.includes("異常")) return "color-trouble";
             if (taskName.includes("停止") || taskName.includes("一時停止") || taskName.includes("待機")) return "color-stop";
             if (taskName.includes("休憩")) return "color-break";
             return "color-other";
         }
 
-        function renderChart(csvData) {
-            const logs = parseCSV(csvData);
+        function renderChart(logs) {
             if (logs.length === 0) {
                 alert('有効なログデータが見つかりませんでした');
                 return;
@@ -532,6 +796,14 @@
                 row.appendChild(track);
                 mount.appendChild(row);
             });
+
+            // Update title
+            const firstDate = logs[0].start.toLocaleDateString('ja-JP');
+            const lastDate = logs[logs.length - 1].start.toLocaleDateString('ja-JP');
+            const title = firstDate === lastDate
+                ? `生産ログ: ${firstDate}`
+                : `生産ログ: ${firstDate} 〜 ${lastDate}`;
+            document.querySelector('h1').innerText = title;
         }
     </script>
 </body>

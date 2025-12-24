@@ -16,6 +16,14 @@ export interface LineConfig {
 export type CenterIdleAction = 'none' | 'resume' | 'openLineRing' | 'startDefault';
 export type ThemeMode = 'dark' | 'light';
 
+export type UIElementId = 'clock' | 'controls' | 'lineStatus' | 'timer';
+
+export interface UIPosition {
+  x: number; // percentage (0-100) or pixels
+  y: number; // percentage (0-100) or pixels
+  anchor?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+}
+
 export interface AppConfig {
   lines: Record<LineId, LineConfig>;
   centerIdleAction: CenterIdleAction;
@@ -23,6 +31,7 @@ export interface AppConfig {
   uiScale?: number;
   wheelOffsetY?: number;  // Vertical offset for wheel position (-100 to 100)
   theme: ThemeMode;
+  uiPositions?: Partial<Record<UIElementId, UIPosition>>;
 }
 
 export interface LogEntry {

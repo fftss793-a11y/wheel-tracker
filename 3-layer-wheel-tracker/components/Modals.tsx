@@ -458,7 +458,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                 <span className="text-slate-300 text-sm font-medium group-hover:text-white transition-colors">UI サイズ (縮小/拡大)</span>
                                 <div className="flex gap-2 items-center">
                                     <input
-                                        type="range" min="50" max="150" step="5"
+                                        type="range" min="30" max="150" step="5"
                                         value={(localConfig.uiScale || 1.0) * 100}
                                         onChange={e => setLocalConfig({ ...localConfig, uiScale: Number(e.target.value) / 100 })}
                                         className="w-32 accent-blue-500"
@@ -473,7 +473,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                 <span className="text-slate-300 text-sm font-medium group-hover:text-white transition-colors">ホイール位置 (上下)</span>
                                 <div className="flex gap-2 items-center">
                                     <input
-                                        type="range" min="-100" max="100" step="5"
+                                        type="range" min="-200" max="100" step="5"
                                         value={localConfig.wheelOffsetY || 0}
                                         onChange={e => setLocalConfig({ ...localConfig, wheelOffsetY: Number(e.target.value) })}
                                         className="w-32 accent-blue-500"
