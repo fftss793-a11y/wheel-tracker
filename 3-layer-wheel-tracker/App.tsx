@@ -439,7 +439,7 @@ function App() {
       >
         <div className={`select-none text-right ${isEditMode ? '' : 'pointer-events-none'}`}>
           <div className="text-[12px] uppercase tracking-widest text-slate-400 font-bold mb-1">経過時間</div>
-          <div className={`text-8xl sm:text-9xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-600'}`}>
+          <div className={`text-6xl font-mono font-bold tracking-tighter drop-shadow-2xl tabular-nums ${currentSession ? (isLightTheme ? 'text-slate-900' : 'text-white') : 'text-slate-600'}`}>
             {currentSession ? formatDuration(now - currentSession.startedAt) : "00:00:00"}
           </div>
         </div>
@@ -504,6 +504,7 @@ function App() {
         onClose={() => setIsLogOpen(false)}
         logs={getAllLogs()}
         onUpdateMemo={updateLogMemo}
+        onDeleteLog={removeLog}
       />
 
       {/* Settings Modals */}

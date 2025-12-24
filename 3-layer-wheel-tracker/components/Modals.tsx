@@ -44,9 +44,10 @@ interface LogModalProps {
     onClose: () => void;
     logs: LogEntry[];
     onUpdateMemo?: (logId: string, line: LineId, newMemo: string) => void;
+    onDeleteLog?: (logId: string, line: LineId) => void;
 }
 
-export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpdateMemo }) => {
+export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpdateMemo, onDeleteLog }) => {
     const [query, setQuery] = useState('');
     const [editingLogId, setEditingLogId] = useState<string | null>(null);
     const [editMemo, setEditMemo] = useState('');
@@ -131,14 +132,15 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 <div className="max-w-5xl mx-auto flex flex-col gap-2">
                     {/* Header Bar */}
-                    <div className="sticky top-0 z-10 grid grid-cols-[100px_1fr] md:grid-cols-[100px_150px_300px_1fr] gap-x-4 px-3 py-2 bg-[#020617] border-b border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="sticky top-0 z-10 grid grid-cols-[100px_1fr_40px] md:grid-cols-[100px_150px_300px_1fr_40px] gap-x-4 px-3 py-2 bg-[#020617] border-b border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                         <div>ライン</div>
                         <div>タスク</div>
                         <div className="hidden md:block">メモ</div>
-                        <div className="col-span-2 md:col-span-1 text-right md:text-left">時間 / 詳細</div>
+                        <div className="col-span-1 text-right md:text-left">時間 / 詳細</div>
+                        <div></div>
                     </div>
                     {filteredLogs.map(log => (
-                        <div key={log.id} className="grid grid-cols-[100px_1fr] md:grid-cols-[100px_150px_300px_1fr] gap-x-4 gap-y-1 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-700 transition-all text-xs md:text-sm">
+                        <div key={log.id} className="grid grid-cols-[100px_1fr_40px] md:grid-cols-[100px_150px_300px_1fr_40px] gap-x-4 gap-y-1 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800/50 hover:border-slate-700 transition-all text-xs md:text-sm">
                             <div className="flex items-center">
                                 <span
                                     className="px-2 py-0.5 rounded text-[10px] md:text-xs font-bold text-slate-950 mr-2 shadow-[0_0_10px_-3px_currentColor]"
@@ -198,11 +200,27 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
                                     </button>
                                 )}
                             </div>
-                            <div className="col-span-2 md:col-span-1 text-slate-400 font-mono text-xs flex items-center gap-2 justify-end flex-wrap">
+                            <div className="col-span-1 text-slate-400 font-mono text-xs flex items-center gap-2 justify-end flex-wrap">
                                 {formatDateTime(log.startedAt)}
                                 <span className="opacity-30">→</span>
                                 {formatDateTime(log.endedAt)}
                                 <span className="ml-3 text-blue-300 font-bold">({formatDurationVerbose(log.startedAt, log.endedAt)})</span>
+                            </div>
+                            {/* Delete Button */}
+                            <div className="flex items-center justify-center row-span-2 md:row-span-1">
+                                {onDeleteLog && (
+                                    <button
+                                        onClick={() => {
+                                            if (confirm('このログを削除しますか？')) {
+                                                onDeleteLog(log.id, log.line);
+                                            }
+                                        }}
+                                        className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                                        title="削除"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}
