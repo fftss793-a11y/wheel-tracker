@@ -281,6 +281,12 @@ function App() {
   // --- Keyboard ---
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      // モーダル内の入力フィールドにフォーカスがある場合はショートカットを無効化
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
       if (e.code === 'Space') {
         e.preventDefault();
         if (!isEditMode && activeSessions[currentLine]) stopTracking(currentLine);

@@ -51,10 +51,25 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
     const [query, setQuery] = useState('');
     const [editingLogId, setEditingLogId] = useState<string | null>(null);
     const [editMemo, setEditMemo] = useState('');
+    const [deletedLogIds, setDeletedLogIds] = useState<Set<string>>(new Set());
+
+    // Reset deleted IDs when modal opens
+    useEffect(() => {
+        if (isOpen) setDeletedLogIds(new Set());
+    }, [isOpen]);
+
+    // Handle delete with UI update
+    const handleDelete = (logId: string, line: LineId) => {
+        if (confirm('このログを削除しますか？')) {
+            onDeleteLog?.(logId, line);
+            setDeletedLogIds(prev => new Set(prev).add(logId));
+        }
+    };
 
     if (!isOpen) return null;
 
     const filteredLogs = logs
+        .filter(l => !deletedLogIds.has(l.id))
         .filter(l => {
             const q = query.toLowerCase();
             return (
@@ -64,7 +79,6 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
                 (l.reason && l.reason.toLowerCase().includes(q))
             );
         })
-        .sort((a, b) => b.endedAt - a.endedAt)
         .sort((a, b) => b.endedAt - a.endedAt)
         .slice(0, 500);
 
@@ -210,11 +224,7 @@ export const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose, logs, onUpd
                             <div className="flex items-center justify-center row-span-2 md:row-span-1">
                                 {onDeleteLog && (
                                     <button
-                                        onClick={() => {
-                                            if (confirm('このログを削除しますか？')) {
-                                                onDeleteLog(log.id, log.line);
-                                            }
-                                        }}
+                                        onClick={() => handleDelete(log.id, log.line)}
                                         className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
                                         title="削除"
                                     >

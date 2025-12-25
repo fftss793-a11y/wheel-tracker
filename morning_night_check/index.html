@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>朝夜チェック入力ツール</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>朝夜チェック入力</h1>
+
+        <!-- Basic Info Section -->
+        <section class="section" id="basic-info">
+            <h2>基本情報</h2>
+            <div class="form-group">
+                <label for="date">日付</label>
+                <input type="date" id="date">
+            </div>
+            <div class="form-group">
+                <label for="check-type">チェック種別</label>
+                <select id="check-type">
+                    <option value="朝" selected>朝</option>
+                    <option value="夜">夜</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="day-type">仕事/休み</label>
+                <select id="day-type">
+                    <option value="仕事" selected>仕事</option>
+                    <option value="休み">休み</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Pain Score Section -->
+        <section class="section" id="pain-scores">
+            <h2>痛みスコア (0:なし 〜 5:最大)</h2>
+            <div class="parts-header">
+                <span>右スネ</span>
+                <span>アキ</span>
+                <span>ふく</span>
+                <span>親指</span>
+                <span>アーチ</span>
+                <span>左股</span>
+            </div>
+
+            <!-- Sleep -->
+            <div class="score-group">
+                <h3>寝</h3>
+                <div class="score-inputs" data-group="sleep">
+                    <select aria-label="寝:右スネ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="寝:アキ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="寝:ふく"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="寝:親指"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="寝:アーチ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="寝:左股"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                </div>
+            </div>
+
+            <!-- Sit -->
+            <div class="score-group">
+                <h3>座</h3>
+                <div class="score-inputs" data-group="sit">
+                    <select aria-label="座:右スネ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="座:アキ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="座:ふく"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="座:親指"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="座:アーチ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="座:左股"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                </div>
+            </div>
+
+            <!-- 10 Steps After -->
+            <div class="score-group">
+                <h3>10歩後</h3>
+                <div class="score-inputs" data-group="steps">
+                    <select aria-label="10歩後:右スネ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="10歩後:アキ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="10歩後:ふく"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="10歩後:親指"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="10歩後:アーチ"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <select aria-label="10歩後:左股"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Load Balance Section -->
+        <section class="section" id="load-balance">
+            <h2>荷重バランス (立10秒)</h2>
+            <div class="form-group">
+                <label for="load-select">荷重</label>
+                <select id="load-select">
+                    <option value="左＞右">左＞右</option>
+                    <option value="右＞左">右＞左</option>
+                    <option value="中央">中央</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Notice Section -->
+        <section class="section" id="notice-section">
+            <h2>気づき</h2>
+            <textarea id="notice-text" placeholder="ここに気づきを入力してください"></textarea>
+        </section>
+
+        <!-- Output Section -->
+        <section class="section" id="output-section">
+            <button id="generate-btn" class="primary-btn">テキスト作成</button>
+            <textarea id="output-text" readonly placeholder="ここにテキストが生成されます"></textarea>
+            <button id="copy-btn" class="secondary-btn">コピー</button>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
