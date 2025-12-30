@@ -11,7 +11,7 @@ import { DEFAULT_CONFIG, LINES, LINE_COLORS } from './constants';
 import { uuid, formatDuration } from './utils';
 import Wheel from './components/Wheel';
 import Draggable from './components/Draggable';
-import { PromptModal, LogModal, LineSettingsModal, GlobalSettingsModal, MemoModal, HelpModal, TemplateModal } from './components/Modals';
+import { PromptModal, LogModal, LineSettingsModal, GlobalSettingsModal, MemoModal, HelpModal } from './components/Modals';
 
 const STORAGE_KEY_CONFIG = 'wheel_config_factory_v6';
 const STORAGE_KEY_LOGS_PREFIX = 'timelogs_v2_';
@@ -26,6 +26,9 @@ function App() {
   const [lastEnded, setLastEnded] = useState<Record<LineId, { task: string; endedAt: number } | null>>({
     A: null, B: null, C: null, D: null, E: null, F: null
   });
+
+  // Admin State
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // UI State
   const [now, setNow] = useState(Date.now());
@@ -42,7 +45,7 @@ function App() {
   const [isMemoOpen, setIsMemoOpen] = useState(false); // For Memo Modal
   const [currentMemo, setCurrentMemo] = useState(''); // Current memo text
   const [isHelpOpen, setIsHelpOpen] = useState(false); // For Help Modal
-  const [isTemplateOpen, setIsTemplateOpen] = useState(false); // For Template Modal
+
 
   // Refs
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -54,7 +57,12 @@ function App() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_CONFIG);
-      if (saved) setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setConfig({ ...DEFAULT_CONFIG, ...parsed, adminPassword: parsed.adminPassword || '0000' });
+      } else {
+        setConfig({ ...DEFAULT_CONFIG, adminPassword: '0000' });
+      }
     } catch (e) { console.error('Failed to load config', e); }
   }, []);
 
@@ -222,6 +230,35 @@ function App() {
     }
   };
 
+
+  // --- Admin Auth ---
+  const checkAdminAuth = (onSuccess: () => void) => {
+    if (isAdmin) {
+      onSuccess();
+      return;
+    }
+    const input = prompt('管理者パスワードを入力してください');
+    if (input === config.adminPassword) {
+      setIsAdmin(true);
+      onSuccess();
+    } else if (input !== null) {
+      alert('パスワードが違います');
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (isEditMode) {
+      setIsEditMode(false);
+      setIsAdmin(false);
+    } else {
+      setIsEditMode(true);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    checkAdminAuth(() => { });
+  };
+
   // --- End of Day Handler ---
   const handleEndOfDay = () => {
     setPromptState({
@@ -351,7 +388,7 @@ function App() {
       <Draggable
         id="clock"
         initialPosition={getUIPosition('clock')}
-        isEnabled={isEditMode}
+        isEnabled={isEditMode && isAdmin}
         onPositionChange={handleUIPositionChange}
         className="z-30"
         bounds={{ left: 0, top: 0, right: 0, bottom: 0 }}
@@ -370,25 +407,32 @@ function App() {
       <Draggable
         id="controls"
         initialPosition={getUIPosition('controls')}
-        isEnabled={isEditMode}
+        isEnabled={isEditMode && isAdmin}
         onPositionChange={handleUIPositionChange}
         className="z-40"
         bounds={{ left: 0, top: 0, right: 0, bottom: 0 }}
       >
         <div className="flex flex-col gap-3 items-end pointer-events-auto">
           <div className="flex gap-2">
-            <button onClick={() => setIsEditMode(!isEditMode)} className={`p-4 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title="設定"><Settings className={isEditMode ? "animate-spin" : ""} size={24} /></button>
+            <button onClick={handleEditToggle} className={`p-4 rounded-lg border transition-all shadow-lg ${isEditMode ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`} title={isEditMode ? "編集モード終了" : "編集モード開始"}>
+              <Settings className={isEditMode ? "animate-spin" : ""} size={24} />
+            </button>
           </div>
           {isEditMode && (
             <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
+              <button
+                onClick={isAdmin ? () => setIsAdmin(false) : handleAdminLogin}
+                className={`p-3 rounded-lg border transition-all shadow-lg ${isAdmin ? 'bg-orange-600 border-orange-500 text-white' : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'}`}
+                title={isAdmin ? "管理者ログアウト" : "管理者ログイン"}
+              >
+                {isAdmin ? <div className="font-bold text-xs">ADMIN</div> : <div className="font-bold text-xs opacity-50">USER</div>}
+              </button>
               <button onClick={handleEndOfDay} className="p-3 rounded-lg bg-orange-600/80 border border-orange-500 text-white hover:bg-orange-500 transition-all shadow-lg" title="終業">
                 <LogOut size={20} />
               </button>
-              <button onClick={() => setIsTemplateOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="テンプレート">
-                <Layers size={20} />
-              </button>
+
               <button onClick={() => setIsLogOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ログ"><FileText size={20} /></button>
-              <button onClick={() => setIsGlobalSettingsOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="全体設定"><LayoutDashboard size={20} /></button>
+              <button onClick={() => isAdmin ? setIsGlobalSettingsOpen(true) : checkAdminAuth(() => setIsGlobalSettingsOpen(true))} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="全体設定"><LayoutDashboard size={20} /></button>
               <button onClick={() => setIsHelpOpen(true)} className="p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all shadow-lg" title="ヘルプ"><HelpCircle size={20} /></button>
             </div>
           )}
@@ -399,7 +443,7 @@ function App() {
       <Draggable
         id="lineStatus"
         initialPosition={getUIPosition('lineStatus')}
-        isEnabled={isEditMode}
+        isEnabled={isEditMode && isAdmin}
         onPositionChange={handleUIPositionChange}
         className="z-30"
         bounds={{ left: 0, top: 0, right: 0, bottom: 0 }}
@@ -409,7 +453,8 @@ function App() {
             <div className="px-3 py-1 rounded text-[12px] font-bold bg-slate-800 text-slate-300 border border-slate-700 tracking-widest">
               ライン選択
             </div>
-            {isEditMode && <span className="text-xs text-blue-400 font-bold animate-pulse">設定モード中...</span>}
+            {isEditMode && isAdmin && <span className="text-xs text-orange-400 font-bold animate-pulse">管理者モード中</span>}
+            {isEditMode && !isAdmin && <span className="text-xs text-blue-400 font-bold animate-pulse">編集モード中</span>}
           </div>
           <div className={`text-6xl font-black tracking-tight drop-shadow-xl ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
             {config.lines[currentLine].name}
@@ -438,7 +483,7 @@ function App() {
       <Draggable
         id="timer"
         initialPosition={getUIPosition('timer')}
-        isEnabled={isEditMode}
+        isEnabled={isEditMode && isAdmin}
         onPositionChange={handleUIPositionChange}
         className="z-30"
         bounds={{ left: 0, top: 0, right: 0, bottom: 0 }}
@@ -462,7 +507,7 @@ function App() {
         }}
       >
         {/* Background Ring (Faint) */}
-        {isEditMode && <div className="absolute top-32 text-blue-400 text-sm font-bold animate-bounce tracking-widest z-40 bg-slate-950/80 px-6 py-2 rounded-full border border-blue-500/30">設定モード実行中</div>}
+        {isEditMode && isAdmin && <div className="absolute top-32 text-orange-400 text-sm font-bold animate-bounce tracking-widest z-40 bg-slate-950/80 px-6 py-2 rounded-full border border-orange-500/30">管理者モード実行中</div>}
         <div
           className="transition-transform duration-500 pointer-events-auto scale-[0.8] sm:scale-90 xl:scale-100"
           style={{ transform: `translateY(${config.wheelOffsetY || 0}px)` }}
@@ -527,6 +572,7 @@ function App() {
             }));
             setEditingLine(null);
           }}
+          isAdmin={isAdmin}
         />
       )}
       <GlobalSettingsModal
@@ -576,17 +622,13 @@ function App() {
             }
           }));
         }}
+        isAdmin={isAdmin}
       />
       <HelpModal
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
       />
-      <TemplateModal
-        isOpen={isTemplateOpen}
-        onClose={() => setIsTemplateOpen(false)}
-        currentConfig={config}
-        onApplyTemplate={(newConfig) => setConfig(newConfig)}
-      />
+
     </div>
   );
 }

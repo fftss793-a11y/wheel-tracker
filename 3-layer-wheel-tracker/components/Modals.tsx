@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AppConfig, LineId, LogEntry, Category, CategoryItem, SavedTemplate } from '../types';
+import { AppConfig, LineId, LogEntry, Category, CategoryItem } from '../types';
 import { LINES, LINE_COLORS } from '../constants';
 import { formatDateTime, formatDurationVerbose, uuid } from '../utils';
 import { X, Search, FileDown, Upload, RotateCcw, Save, Pencil, Settings2, Layers, Trash2, Plus, Download } from 'lucide-react';
@@ -249,6 +249,7 @@ interface LineSettingsModalProps {
     lineId: LineId;
     config: AppConfig;
     onSave: (lineId: LineId, newName: string, newCats: Category[]) => void;
+    isAdmin: boolean;
 }
 
 // Helper to convert Category to editable format
@@ -272,7 +273,7 @@ const editableToCategory = (edit: EditableCategory): Category => {
     return edit.name;
 };
 
-export const LineSettingsModal: React.FC<LineSettingsModalProps> = ({ isOpen, onClose, lineId, config, onSave }) => {
+export const LineSettingsModal: React.FC<LineSettingsModalProps> = ({ isOpen, onClose, lineId, config, onSave, isAdmin }) => {
     const [name, setName] = useState('');
     const [categories, setCategories] = useState<EditableCategory[]>([]);
     const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
@@ -341,22 +342,27 @@ export const LineSettingsModal: React.FC<LineSettingsModalProps> = ({ isOpen, on
                                             onChange={e => updateCategory(idx, 'name', e.target.value)}
                                             placeholder="タスク名"
                                             className="flex-1 bg-transparent text-white text-sm font-bold focus:outline-none px-2"
+                                            disabled={!isAdmin}
                                         />
-                                        <button
-                                            onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-                                            className={`px-2 py-1 text-[10px] rounded ${cat.subCategories ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 text-slate-400'} hover:opacity-80 transition-opacity`}
-                                        >
-                                            {cat.subCategories ? `▼ ${cat.subCategories.split(',').filter(s => s.trim()).length}個` : '+ サブ'}
-                                        </button>
-                                        <button
-                                            onClick={() => removeCategory(idx)}
-                                            className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                                        >
-                                            <X size={14} />
-                                        </button>
+                                        {isAdmin && (
+                                            <>
+                                                <button
+                                                    onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+                                                    className={`px-2 py-1 text-[10px] rounded ${cat.subCategories ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 text-slate-400'} hover:opacity-80 transition-opacity`}
+                                                >
+                                                    {cat.subCategories ? `▼ ${cat.subCategories.split(',').filter(s => s.trim()).length}個` : '+ サブ'}
+                                                </button>
+                                                <button
+                                                    onClick={() => removeCategory(idx)}
+                                                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
 
-                                    {expandedIdx === idx && (
+                                    {expandedIdx === idx && isAdmin && (
                                         <div className="p-2 pt-0 border-t border-slate-700/50">
                                             <input
                                                 type="text"
@@ -371,12 +377,14 @@ export const LineSettingsModal: React.FC<LineSettingsModalProps> = ({ isOpen, on
                                 </div>
                             ))}
 
-                            <button
-                                onClick={addCategory}
-                                className="border border-dashed border-slate-600 rounded-lg p-2 text-slate-500 hover:text-slate-300 hover:border-slate-500 transition-colors text-sm"
-                            >
-                                + タスク追加
-                            </button>
+                            {isAdmin && (
+                                <button
+                                    onClick={addCategory}
+                                    className="border border-dashed border-slate-600 rounded-lg p-2 text-slate-500 hover:text-slate-300 hover:border-slate-500 transition-colors text-sm"
+                                >
+                                    + タスク追加
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -582,9 +590,10 @@ interface MemoModalProps {
     lineName?: string;
     presets?: string[];
     onPresetsChange?: (newPresets: string[]) => void;
+    isAdmin: boolean;
 }
 
-export const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo, onSave, lineName, presets = [], onPresetsChange }) => {
+export const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo, onSave, lineName, presets = [], onPresetsChange, isAdmin }) => {
     const [localMemo, setLocalMemo] = useState(memo);
     const [isAddingPreset, setIsAddingPreset] = useState(false);
     const [newPresetText, setNewPresetText] = useState('');
@@ -635,14 +644,14 @@ export const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo, onS
                                 <button
                                     key={i}
                                     onClick={() => handlePresetClick(preset)}
-                                    onContextMenu={(e) => { e.preventDefault(); handleDeletePreset(i); }}
-                                    className="px-3 py-1.5 bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded-lg text-sm font-medium hover:bg-blue-600/30 hover:border-blue-500/50 transition-all"
-                                    title="クリックで追加、右クリックで削除"
+                                    onContextMenu={(e) => { e.preventDefault(); if (isAdmin) handleDeletePreset(i); }}
+                                    className={`px-3 py-1.5 bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded-lg text-sm font-medium hover:bg-blue-600/30 hover:border-blue-500/50 transition-all ${!isAdmin ? 'cursor-pointer' : 'cursor-context-menu'}`}
+                                    title={isAdmin ? "クリックで追加、右クリックで削除" : "クリックで追加"}
                                 >
                                     {preset}
                                 </button>
                             ))}
-                            {isAddingPreset ? (
+                            {isAddingPreset && isAdmin ? (
                                 <div className="flex items-center gap-1">
                                     <input
                                         type="text"
@@ -656,7 +665,7 @@ export const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, memo, onS
                                     <button onClick={handleAddPreset} className="text-green-400 hover:text-green-300 px-1">✓</button>
                                     <button onClick={() => setIsAddingPreset(false)} className="text-red-400 hover:text-red-300 px-1">✕</button>
                                 </div>
-                            ) : (
+                            ) : isAdmin && (
                                 <button
                                     onClick={() => setIsAddingPreset(true)}
                                     className="px-3 py-1.5 bg-slate-800 text-slate-400 border border-dashed border-slate-600 rounded-lg text-sm hover:text-slate-200 hover:border-slate-500 transition-all flex items-center gap-1"
@@ -791,200 +800,3 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
     );
 };
 
-/* --- Template Modal (Wheel Selection) --- */
-const TEMPLATE_STORAGE_KEY = 'wheel_templates';
-
-interface TemplateModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    currentConfig: AppConfig;
-    onApplyTemplate: (config: AppConfig) => void;
-}
-
-const WHEEL_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#84cc16'];
-
-export const TemplateModal: React.FC<TemplateModalProps> = ({ isOpen, onClose, currentConfig, onApplyTemplate }) => {
-    const [templates, setTemplates] = useState<SavedTemplate[]>([]);
-    const [newTemplateName, setNewTemplateName] = useState('');
-    const [editingId, setEditingId] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (isOpen) {
-            const saved = localStorage.getItem(TEMPLATE_STORAGE_KEY);
-            if (saved) {
-                try { setTemplates(JSON.parse(saved)); } catch { setTemplates([]); }
-            }
-        }
-    }, [isOpen]);
-
-    const saveTemplates = (newTemplates: SavedTemplate[]) => {
-        setTemplates(newTemplates);
-        localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(newTemplates));
-    };
-
-    const handleSaveNew = () => {
-        if (!newTemplateName.trim()) return;
-        const newTemplate: SavedTemplate = {
-            id: uuid(),
-            name: newTemplateName.trim(),
-            config: JSON.parse(JSON.stringify(currentConfig)),
-            createdAt: Date.now()
-        };
-        saveTemplates([...templates, newTemplate]);
-        setNewTemplateName('');
-    };
-
-    const handleDelete = (id: string) => {
-        if (!confirm('このテンプレートを削除しますか？')) return;
-        saveTemplates(templates.filter(t => t.id !== id));
-    };
-
-    const handleRename = (id: string, newName: string) => {
-        saveTemplates(templates.map(t => t.id === id ? { ...t, name: newName } : t));
-        setEditingId(null);
-    };
-
-    const handleApply = (template: SavedTemplate) => {
-        onApplyTemplate(template.config);
-        onClose();
-    };
-
-    if (!isOpen) return null;
-
-    // Calculate wheel segments
-    const n = templates.length;
-    const offset = -Math.PI / 2;
-    const innerR = 60;
-    const outerR = 150;
-
-    const polarToCartesian = (cx: number, cy: number, r: number, angle: number) => ({
-        x: cx + r * Math.cos(angle),
-        y: cy + r * Math.sin(angle)
-    });
-
-    const describeArc = (r1: number, r2: number, a0: number, a1: number) => {
-        const p0 = polarToCartesian(0, 0, r1, a0);
-        const p1 = polarToCartesian(0, 0, r2, a0);
-        const p2 = polarToCartesian(0, 0, r2, a1);
-        const p3 = polarToCartesian(0, 0, r1, a1);
-        const largeArc = a1 - a0 > Math.PI ? 1 : 0;
-        return `M ${p0.x} ${p0.y} L ${p1.x} ${p1.y} A ${r2} ${r2} 0 ${largeArc} 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${r1} ${r1} 0 ${largeArc} 0 ${p0.x} ${p0.y} Z`;
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1300] backdrop-blur-sm animate-in zoom-in-95 duration-200" onClick={onClose}>
-            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-[95vw] max-w-[500px] max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Layers className="w-5 h-5 text-blue-400" />
-                        テンプレート管理
-                    </h2>
-                    <button onClick={onClose}><X className="text-slate-500 hover:text-white transition-colors" /></button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar flex flex-col items-center gap-6">
-                    {/* Wheel Selection */}
-                    {n > 0 ? (
-                        <div className="relative">
-                            <svg width="320" height="320" viewBox="-160 -160 320 320" className="drop-shadow-lg">
-                                {templates.map((template, i) => {
-                                    const a0 = offset + (2 * Math.PI * i) / n;
-                                    const a1 = offset + (2 * Math.PI * (i + 1)) / n;
-                                    const midAngle = (a0 + a1) / 2;
-                                    const labelR = (innerR + outerR) / 2;
-                                    const lx = labelR * Math.cos(midAngle);
-                                    const ly = labelR * Math.sin(midAngle);
-                                    const color = WHEEL_COLORS[i % WHEEL_COLORS.length];
-
-                                    return (
-                                        <g key={template.id} className="cursor-pointer group" onClick={() => handleApply(template)}>
-                                            <path
-                                                d={describeArc(innerR, outerR, a0, a1)}
-                                                fill={color}
-                                                className="stroke-[2px] stroke-slate-950 hover:brightness-110 transition-all"
-                                            />
-                                            <text
-                                                x={lx}
-                                                y={ly}
-                                                textAnchor="middle"
-                                                dominantBaseline="middle"
-                                                className="fill-white text-[11px] font-bold pointer-events-none select-none"
-                                                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
-                                            >
-                                                {template.name.length > 8 ? template.name.slice(0, 8) + '...' : template.name}
-                                            </text>
-                                        </g>
-                                    );
-                                })}
-                                {/* Center */}
-                                <circle r={innerR - 5} fill="#0f172a" className="stroke-[2px] stroke-slate-700" />
-                                <text textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[10px] font-bold pointer-events-none">
-                                    クリックで適用
-                                </text>
-                            </svg>
-                        </div>
-                    ) : (
-                        <div className="text-slate-500 text-center py-8">
-                            <Layers className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                            <p>保存済みテンプレートがありません</p>
-                        </div>
-                    )}
-
-                    {/* Template List */}
-                    <div className="w-full space-y-2">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">テンプレート一覧</h3>
-                        {templates.map(t => (
-                            <div key={t.id} className="flex items-center gap-2 bg-slate-800 rounded-lg p-2 border border-slate-700">
-                                {editingId === t.id ? (
-                                    <input
-                                        type="text"
-                                        defaultValue={t.name}
-                                        className="flex-1 bg-slate-900 text-white text-sm p-1 rounded focus:outline-none"
-                                        onBlur={(e) => handleRename(t.id, e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') handleRename(t.id, e.currentTarget.value); }}
-                                        autoFocus
-                                    />
-                                ) : (
-                                    <span className="flex-1 text-white text-sm font-medium truncate">{t.name}</span>
-                                )}
-                                <button onClick={() => setEditingId(t.id)} className="p-1 text-slate-400 hover:text-blue-400 transition-colors">
-                                    <Pencil size={14} />
-                                </button>
-                                <button onClick={() => handleDelete(t.id)} className="p-1 text-slate-400 hover:text-red-400 transition-colors">
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Save New */}
-                    <div className="w-full border-t border-slate-700 pt-4">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">現在の設定を保存</h3>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={newTemplateName}
-                                onChange={e => setNewTemplateName(e.target.value)}
-                                placeholder="テンプレート名"
-                                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-blue-500"
-                            />
-                            <button
-                                onClick={handleSaveNew}
-                                disabled={!newTemplateName.trim()}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-bold transition-all flex items-center gap-2"
-                            >
-                                <Plus size={16} /> 保存
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end">
-                    <button onClick={onClose} className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-all">
-                        閉じる
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};

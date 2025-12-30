@@ -31,6 +31,7 @@ export interface AppConfig {
   uiScale?: number;
   wheelOffsetY?: number;  // Vertical offset for wheel position (-100 to 100)
   theme: ThemeMode;
+  adminPassword?: string;
   uiPositions?: Partial<Record<UIElementId, UIPosition>>;
 }
 
@@ -66,9 +67,4 @@ export interface PromptState {
   onCancel: () => void;
 }
 
-export interface SavedTemplate {
-  id: string;
-  name: string;
-  config: AppConfig;
-  createdAt: number;
-}
+
