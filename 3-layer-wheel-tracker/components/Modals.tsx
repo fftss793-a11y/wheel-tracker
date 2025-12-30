@@ -420,10 +420,36 @@ interface GlobalSettingsModalProps {
 
 export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClose, config, onSave, onReset, onDeleteLogs }) => {
     const [localConfig, setLocalConfig] = useState<AppConfig>(config);
+    // Bulk Update State
+    const [bulkCategories, setBulkCategories] = useState<EditableCategory[]>([]);
+    const [expandedBulkIdx, setExpandedBulkIdx] = useState<number | null>(null);
 
     useEffect(() => {
-        if (isOpen) setLocalConfig(JSON.parse(JSON.stringify(config)));
+        if (isOpen) {
+            setLocalConfig(JSON.parse(JSON.stringify(config)));
+            // Initialize bulk editor with Line A's categories as a template
+            if (config.lines.A) {
+                setBulkCategories(config.lines.A.categories.map(categoryToEditable));
+            } else {
+                setBulkCategories([]);
+            }
+        }
     }, [isOpen, config]);
+
+    // Bulk Update Handlers
+    const updateBulkCategory = (idx: number, field: 'name' | 'subCategories', value: string) => {
+        setBulkCategories(prev => prev.map((c, i) => i === idx ? { ...c, [field]: value } : c));
+    };
+
+    const addBulkCategory = () => {
+        setBulkCategories(prev => [...prev, { name: '', subCategories: '' }]);
+        setExpandedBulkIdx(bulkCategories.length);
+    };
+
+    const removeBulkCategory = (idx: number) => {
+        setBulkCategories(prev => prev.filter((_, i) => i !== idx));
+        if (expandedBulkIdx === idx) setExpandedBulkIdx(null);
+    };
 
     if (!isOpen) return null;
 
@@ -542,6 +568,75 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                         </div>
                     </section>
 
+                    {/* Bulk Category Update */}
+                    <section>
+                        <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
+                            <Layers className="w-4 h-4" /> 全ライン共通タスク設定
+                        </h3>
+                        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col gap-4">
+
+                            {/* Input Form (Copied Logic) */}
+                            <div className="flex flex-col gap-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">タスク項目</span>
+                                    <span className="text-[10px] text-slate-500">{bulkCategories.length} 項目</span>
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    {bulkCategories.map((cat, idx) => (
+                                        <div key={idx} className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+                                            <div className="flex items-center gap-2 p-2">
+                                                <input
+                                                    type="text"
+                                                    value={cat.name}
+                                                    onChange={e => updateBulkCategory(idx, 'name', e.target.value)}
+                                                    placeholder="タスク名"
+                                                    className="flex-1 bg-transparent text-white text-sm font-bold focus:outline-none px-2"
+                                                />
+                                                <button
+                                                    onClick={() => setExpandedBulkIdx(expandedBulkIdx === idx ? null : idx)}
+                                                    className={`px-2 py-1 text-[10px] rounded ${cat.subCategories ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 text-slate-400'} hover:opacity-80 transition-opacity`}
+                                                >
+                                                    {cat.subCategories ? `▼ ${cat.subCategories.split(',').filter(s => s.trim()).length}個` : '+ サブ'}
+                                                </button>
+                                                <button
+                                                    onClick={() => removeBulkCategory(idx)}
+                                                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+
+                                            {expandedBulkIdx === idx && (
+                                                <div className="p-2 pt-0 border-t border-slate-700/50">
+                                                    <input
+                                                        type="text"
+                                                        value={cat.subCategories}
+                                                        onChange={e => updateBulkCategory(idx, 'subCategories', e.target.value)}
+                                                        placeholder="サブカテゴリ (カンマ区切り: 設備故障, 材料不良, ...)"
+                                                        className="w-full bg-slate-900 text-amber-300 text-xs p-2 rounded focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                                    />
+                                                    <p className="text-[10px] text-slate-500 mt-1">例: 設備故障, 材料不良, 品質異常</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    <button
+                                        onClick={addBulkCategory}
+                                        className="border border-dashed border-slate-600 rounded-lg p-2 text-slate-500 hover:text-slate-300 hover:border-slate-500 transition-colors text-sm"
+                                    >
+                                        + タスク追加
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/20 p-2 rounded flex items-center gap-2">
+                                <Settings2 size={12} /> 変更すると全ライン(A-F)のタスク構成が上書きされます
+                            </div>
+                        </div>
+                    </section>
+
                     {/* Data Mgmt */}
                     <section>
                         <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">データ管理</h3>
@@ -570,7 +665,26 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                 <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 text-slate-400 hover:text-white font-bold text-sm transition-colors">キャンセル</button>
                     <button
-                        onClick={() => onSave(localConfig)}
+                        onClick={() => {
+                            // Apply bulk categories to all lines in the local config copy
+                            const newCategories = bulkCategories
+                                .filter(c => c.name.trim().length > 0)
+                                .map(editableToCategory);
+
+                            const newConfig = { ...localConfig };
+
+                            // Iterate over all defined lines and apply the new categories
+                            (Object.keys(newConfig.lines) as LineId[]).forEach(lineId => {
+                                if (newConfig.lines[lineId]) {
+                                    newConfig.lines[lineId] = {
+                                        ...newConfig.lines[lineId],
+                                        categories: newCategories
+                                    };
+                                }
+                            });
+
+                            onSave(newConfig);
+                        }}
                         className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold shadow-lg shadow-blue-900/30 transition-all hover:scale-105"
                     >
                         <Save size={16} /> 設定を保存
